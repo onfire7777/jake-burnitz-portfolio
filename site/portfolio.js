@@ -51,9 +51,11 @@ function setupMedia() {
   const soundtrack = document.getElementById("soundtrack");
   const closeSoundtrack = document.getElementById("close-soundtrack");
   const soundtrackPlayer = document.getElementById("soundtrack-player");
-  const demoLink = document.getElementById("watch-demo");
   const videoDialog = document.getElementById("video-dialog");
   const videoPlayer = document.getElementById("video-player");
+  const videoTitle = document.getElementById("video-title");
+  const videoSource = document.getElementById("video-source");
+  let activeVideoLink;
 
   function showSoundtrack(open) {
     if (open && !soundtrackPlayer.firstElementChild) {
@@ -80,19 +82,26 @@ function setupMedia() {
   });
 
   if (typeof videoDialog.showModal !== "function") return;
-  demoLink.addEventListener("click", (event) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+  document.getElementById("videos").addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-video]");
+    if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+
     event.preventDefault();
+    const videoId = new URL(link.href).searchParams.get("v");
+    const label = document.getElementById(link.getAttribute("aria-labelledby"));
+    activeVideoLink = link;
+    videoTitle.textContent = label.textContent;
+    videoSource.href = link.href;
     videoDialog.showModal();
     videoPlayer.append(createPlayer({
-      title: "BurnOS at the Alexa+ Hackathon",
-      url: "https://www.youtube-nocookie.com/embed/zH-5KSr86Ak?autoplay=1&playsinline=1",
+      title: videoTitle.textContent,
+      url: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1`,
       allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share",
     }));
   });
   videoDialog.addEventListener("close", () => {
     videoPlayer.replaceChildren();
-    demoLink.focus({ preventScroll: true });
+    activeVideoLink.focus({ preventScroll: true });
   });
 }
 

@@ -100,18 +100,75 @@
         <div class="film-copy">
           <p class="eyebrow">YouTube</p>
           <h2 id="videos-title">On camera<span>.</span></h2>
-          <p>I share interviews and conversations on my personal channel, and project demos on BurnFilmz.</p>
-          <div class="channel-links">
-            <a class="button primary" href="https://www.youtube.com/@Jake_Burnitz">Jake Burnitz <span aria-hidden="true">↗</span></a>
-            <a class="button secondary" href="https://www.youtube.com/@burnfilmz1611">BurnFilmz <span aria-hidden="true">↗</span></a>
-          </div>
+          <p>Interviews, conversations, and videos from my personal channel.</p>
+          <a class="button primary" href="https://www.youtube.com/@Jake_Burnitz">Jake Burnitz on YouTube <span aria-hidden="true">↗</span></a>
         </div>
         <figure class="film-feature">
-          <a class="film-cover" id="watch-demo" href="https://www.youtube.com/watch?v=zH-5KSr86Ak" aria-label="Watch the BurnOS demo">
+          <a class="film-cover" data-video href="https://www.youtube.com/watch?v=l3USuXat848" aria-labelledby="title-ben-lang-luigi">
+            <img src="assets/ben-lang-luigi.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </a>
+          <figcaption id="title-ben-lang-luigi">Ben Lang Luigi: It's EASY to KNOW the TRUE CHURCH!</figcaption>
+        </figure>
+      </div>
+
+      <div class="video-grid reveal">
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=cBh_aviTsvQ" aria-labelledby="title-redeemed-zoomer">
+          <div class="film-cover">
+            <img src="assets/redeemed-zoomer.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-redeemed-zoomer">Redeemed Zoomer: Evangelicals are NOT PROTESTANT!</span>
+        </a>
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=-hf1YwWY-xM" aria-labelledby="title-monastery-pilgrimage">
+          <div class="film-cover">
+            <img src="assets/monastery-pilgrimage.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-monastery-pilgrimage">Monastery Pilgrimage 2025 - Saint Anthony Greek Orthodox Monastery</span>
+        </a>
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=mvi7pIkx__g" aria-labelledby="title-ai-can-never-replace-us">
+          <div class="film-cover">
+            <img src="assets/ai-can-never-replace-us.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-ai-can-never-replace-us">this is why AI can never replace us</span>
+        </a>
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=5sHrXnYtHf4" aria-labelledby="title-to-what-end-live">
+          <div class="film-cover">
+            <img src="assets/to-what-end-live.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-to-what-end-live">To What End? Live Stream</span>
+        </a>
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=nbJJphFEQqk" aria-labelledby="title-what-happened-to-me">
+          <div class="film-cover">
+            <img src="assets/what-happened-to-me.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-what-happened-to-me">what happened to me</span>
+        </a>
+        <a class="video-card" data-video href="https://www.youtube.com/watch?v=wxgMktVsQOw" aria-labelledby="title-mark-turnage">
+          <div class="film-cover">
+            <img src="assets/mark-turnage.jpg" width="320" height="180" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </div>
+          <span class="video-card-title" id="title-mark-turnage">In Conversation With A Biblical Scholar - Mark Turnage</span>
+        </a>
+      </div>
+
+      <div class="film film-secondary reveal">
+        <div class="film-copy">
+          <h3>BurnFilmz</h3>
+          <p>Project demos, including my BurnOS walkthrough from the Alexa+ Hackathon.</p>
+          <a class="button secondary" href="https://www.youtube.com/@burnfilmz1611">BurnFilmz on YouTube <span aria-hidden="true">↗</span></a>
+        </div>
+        <figure class="film-feature">
+          <a class="film-cover" data-video href="https://www.youtube.com/watch?v=zH-5KSr86Ak" aria-labelledby="title-burnos-demo">
             <img src="assets/burnos-demo.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
             <span class="film-play" aria-hidden="true">▶</span>
           </a>
-          <figcaption>From BurnFilmz · BurnOS at the Alexa+ Hackathon</figcaption>
+          <figcaption id="title-burnos-demo">BurnOS at the Alexa+ Hackathon</figcaption>
         </figure>
       </div>
     </section>
@@ -149,11 +206,11 @@
 
   <dialog id="video-dialog" aria-labelledby="video-title">
     <div class="media-heading">
-      <h2 id="video-title">BurnOS demo</h2>
+      <h2 id="video-title">YouTube video</h2>
       <form method="dialog"><button class="icon-button" type="submit" aria-label="Close video">×</button></form>
     </div>
     <div id="video-player"></div>
-    <a class="text-link media-link" href="https://www.youtube.com/watch?v=zH-5KSr86Ak" target="_blank" rel="noopener">Open on YouTube <span aria-hidden="true">↗</span></a>
+    <a class="text-link media-link" id="video-source" href="https://www.youtube.com/@Jake_Burnitz" target="_blank" rel="noopener">Open on YouTube <span aria-hidden="true">↗</span></a>
   </dialog>
 </body>
 </html>
