@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10130f">
+  <meta name="description" content="Jake Burnitz builds BurnOS, Mnemosyne, and Mnemetric. Explore his software, open-source work, and videos from his two YouTube channels.">
+  <meta property="og:title" content="Jake Burnitz — Developer &amp; creator">
+  <meta property="og:description" content="Software, research, and video by Jake Burnitz.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jakeburnitz.me/">
+  <link rel="canonical" href="https://jakeburnitz.me/">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="portfolio.js"></script>
+  <title>Jake Burnitz — Developer &amp; creator</title>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#" aria-label="Jake Burnitz home"><span class="brand-icon" aria-hidden="true">JB</span><span>Jake Burnitz</span></a>
+      <nav aria-label="Main navigation">
+        <a href="#work">Work</a>
+        <a href="#videos">Videos</a>
+        <a href="#links">Links</a>
+      </nav>
+      <button class="sound-trigger" type="button" aria-expanded="false" aria-controls="soundtrack" hidden>
+        <span class="equalizer" aria-hidden="true"><i></i><i></i><i></i></span><span>Soundtrack</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" aria-labelledby="intro-title">
+      <div class="hero-copy">
+        <p class="eyebrow hero-label"><span></span> Developer &amp; creator</p>
+        <h1 id="intro-title">Jake<br>Burnitz<span>.</span></h1>
+        <p class="intro">I build voice-first software, open-source tools for AI memory, and make videos about what I build and what I’m curious about.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#work">Explore my work <span aria-hidden="true">↓</span></a>
+          <a class="button secondary" href="https://github.com/onfire7777">GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="art-grid"></div>
+        <div class="orbit-fallback"></div>
+        <canvas id="orbit"></canvas>
+        <div class="art-edge top-left"></div><div class="art-edge top-right"></div>
+        <div class="art-edge bottom-left"></div><div class="art-edge bottom-right"></div>
+        <div class="axis axis-x"></div><div class="axis axis-y"></div>
+      </div>
+    </section>
+
+    <section id="work" class="work section shell" aria-labelledby="work-title">
+      <header class="section-heading reveal">
+        <div><p class="eyebrow">Projects</p><h2 id="work-title">Selected work<span>.</span></h2></div>
+        <a class="text-link" href="https://github.com/onfire7777?tab=repositories">All repositories <span aria-hidden="true">↗</span></a>
+      </header>
+      <div class="project-grid">
+        <article class="project reveal">
+          <div class="project-art voice" aria-hidden="true">
+            <span class="art-caption">Voice interface</span>
+            <div class="signal"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="project-body">
+            <h3>BurnOS</h3>
+            <p>A voice-first desktop assistant for turning spoken ideas into notes, research, and follow-up work.</p>
+            <div class="project-links"><a href="https://burnos.app/">Website <span aria-hidden="true">↗</span></a><a href="https://github.com/onfire7777/Burnos">Source <span aria-hidden="true">↗</span></a></div>
+          </div>
+        </article>
+        <article class="project reveal">
+          <div class="project-art memory" aria-hidden="true">
+            <span class="art-caption">Agent memory</span>
+            <div class="memory-stack"><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="project-body">
+            <h3>Mnemosyne</h3>
+            <p>Open-source, local-first memory for AI agents, with hybrid retrieval and evidence behind what it remembers.</p>
+            <div class="project-links"><a href="https://github.com/onfire7777/Mnemosyne">Source <span aria-hidden="true">↗</span></a></div>
+          </div>
+        </article>
+        <article class="project reveal">
+          <div class="project-art benchmark" aria-hidden="true">
+            <span class="art-caption">Memory evaluation</span>
+            <div class="chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="project-body">
+            <h3>Mnemetric</h3>
+            <p>A benchmark site for comparing AI memory systems and inspecting the results and evaluation methods.</p>
+            <div class="project-links"><a href="https://mnemetric.burnos.app/">Benchmark site <span aria-hidden="true">↗</span></a></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="videos" class="section shell" aria-labelledby="videos-title">
+      <div class="film reveal">
+        <div class="film-copy">
+          <p class="eyebrow">YouTube</p>
+          <h2 id="videos-title">On camera<span>.</span></h2>
+          <p>I share interviews and conversations on my personal channel, and project demos on BurnFilmz.</p>
+          <div class="channel-links">
+            <a class="button primary" href="https://www.youtube.com/@Jake_Burnitz">Jake Burnitz <span aria-hidden="true">↗</span></a>
+            <a class="button secondary" href="https://www.youtube.com/@burnfilmz1611">BurnFilmz <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+        <figure class="film-feature">
+          <a class="film-cover" id="watch-demo" href="https://www.youtube.com/watch?v=zH-5KSr86Ak" aria-label="Watch the BurnOS demo">
+            <img src="assets/burnos-demo.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            <span class="film-play" aria-hidden="true">▶</span>
+          </a>
+          <figcaption>From BurnFilmz · BurnOS at the Alexa+ Hackathon</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="links" class="section shell link-section" aria-labelledby="links-title">
+      <header class="section-heading reveal">
+        <div><p class="eyebrow">Around the web</p><h2 id="links-title">Find me<span>.</span></h2></div>
+      </header>
+      <div class="link-grid reveal">
+        <a class="profile-link" href="https://github.com/onfire7777"><span><strong>GitHub</strong><small>@onfire7777</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://www.youtube.com/@Jake_Burnitz"><span><strong>Jake Burnitz</strong><small>YouTube · Interviews and conversations</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://www.youtube.com/@burnfilmz1611"><span><strong>BurnFilmz</strong><small>YouTube · Project demos</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://burnos.app/"><span><strong>BurnOS</strong><small>Desktop voice assistant</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://mnemetric.burnos.app/"><span><strong>Mnemetric</strong><small>AI memory benchmarks</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://github.com/onfire7777/Mnemosyne"><span><strong>Mnemosyne</strong><small>Open-source agent memory</small></span><span aria-hidden="true">↗</span></a>
+        <a class="profile-link" href="https://github.com/onfire7777/jake-burnitz-portfolio"><span><strong>Portfolio source</strong><small>GitHub repository</small></span><span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell site-footer">
+    <a class="brand" href="#" aria-label="Jake Burnitz, back to top"><span class="brand-icon" aria-hidden="true">JB</span><span>Jake Burnitz</span></a>
+    <a class="text-link" href="https://open.spotify.com/track/2Na0z2gfN67Rzf0vp74Wi3">“Lose You” by Drake <span aria-hidden="true">↗</span></a>
+    <a class="text-link back-top" href="#">Back to top <span aria-hidden="true">↑</span></a>
+  </footer>
+
+  <aside class="soundtrack" id="soundtrack" aria-labelledby="soundtrack-title" hidden>
+    <div class="media-heading">
+      <div><h2 id="soundtrack-title">Soundtrack</h2><p>“Lose You” · Drake</p></div>
+      <button class="icon-button" id="close-soundtrack" type="button" aria-label="Minimize soundtrack">×</button>
+    </div>
+    <div id="soundtrack-player"></div>
+    <a class="text-link media-link" href="https://open.spotify.com/track/2Na0z2gfN67Rzf0vp74Wi3" target="_blank" rel="noopener">Open in Spotify <span aria-hidden="true">↗</span></a>
+  </aside>
+
+  <dialog id="video-dialog" aria-labelledby="video-title">
+    <div class="media-heading">
+      <h2 id="video-title">BurnOS demo</h2>
+      <form method="dialog"><button class="icon-button" type="submit" aria-label="Close video">×</button></form>
+    </div>
+    <div id="video-player"></div>
+    <a class="text-link media-link" href="https://www.youtube.com/watch?v=zH-5KSr86Ak" target="_blank" rel="noopener">Open on YouTube <span aria-hidden="true">↗</span></a>
+  </dialog>
+</body>
+</html>

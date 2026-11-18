@@ -1,0 +1,16 @@
+name = "jake-burnitz-portfolio"
+compatibility_date = "2026-11-17"
+workers_dev = false
+preview_urls = false
+
+[assets]
+directory = "./site"
+not_found_handling = "404-page"
+
+[[routes]]
+pattern = "jakeburnitz.me"
+custom_domain = true
+
+[[routes]]
+pattern = "www.jakeburnitz.me"
+custom_domain = true
