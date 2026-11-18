@@ -214,7 +214,6 @@ figcaption { margin-top: .65rem; font-size: .82rem; color: var(--muted); }
 .video-card .film-play { width: 42px; height: 42px; font-size: .83rem; }
 .video-card:hover .film-play { scale: 1.1; }
 .video-card-title { padding: .9rem 1rem 1rem; font-size: .98rem; font-weight: 650; line-height: 1.3; }
-.video-card-note { display: block; margin-top: .3rem; color: var(--muted); font-size: .8rem; font-weight: 400; }
 .film-secondary { grid-template-columns: 1fr minmax(230px, .56fr); gap: 1.6rem; }
 .film-secondary h3 { font-size: clamp(1.6rem, 3vw, 2.7rem); letter-spacing: -.05em; }
 
