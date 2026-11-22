@@ -287,13 +287,11 @@ figcaption { margin-top: .65rem; font-size: .82rem; color: var(--muted); }
 .soundtrack-artist { color: var(--muted); font: .95rem/1.3 "Instrument Sans", system-ui, sans-serif; letter-spacing: normal; }
 .soundtrack-close { grid-column: 3; grid-row: 1; align-self: start; }
 .soundtrack-actions { grid-column: 2 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
-.soundtrack-action { min-height: 40px; padding: .35rem .75rem; font-size: .88rem; }
-.soundtrack-player, .soundtrack-status { grid-column: 1 / -1; }
-.soundtrack-player iframe { height: 120px; background: var(--paper); }
-.soundtrack-status { color: var(--muted); font-size: .85rem; }
+.soundtrack-player { grid-column: 1 / -1; }
+.soundtrack-player iframe { height: 80px; }
 .soundtrack.is-playing .soundtrack-record::after { animation: record-spin 4s linear infinite; }
 @keyframes record-spin { to { transform: rotate(360deg); } }
-body:has(.soundtrack:not([hidden])) .site-footer { padding-bottom: 16rem; }
+body:has(.soundtrack:not([hidden])) .site-footer { padding-bottom: 12rem; }
 .media-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: .8rem; }
 .media-heading h2 { margin-top: .2rem; font-size: 1.9rem; letter-spacing: -.025em; }
 .icon-button {

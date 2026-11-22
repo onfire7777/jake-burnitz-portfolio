@@ -10,7 +10,7 @@ From the repository root, run:
 python3 -m http.server 8000 --directory site
 ```
 
-Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack opens on arrival, selects the middle nine seconds of the official SoundCloud preview, and loops it using the SoundCloud Widget API. If the browser blocks audible autoplay, a click elsewhere on the page or the Play loop control can start the soundtrack. Portfolio videos load when selected.
+Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack opens on arrival with Spotify’s official player. The browser and Spotify determine autoplay and preview availability. Portfolio videos load when selected.
 
 ## Edit and deploy
 

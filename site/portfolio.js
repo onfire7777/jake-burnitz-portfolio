@@ -59,83 +59,75 @@ function setupSoundtrack() {
   const soundtrack = document.getElementById("soundtrack");
   const close = document.getElementById("close-soundtrack");
   const mount = document.getElementById("soundtrack-player");
-  const play = document.getElementById("soundtrack-play");
-  const status = document.getElementById("soundtrack-status");
+  const spotifyOrigin = "https://open.spotify.com";
+  let frame;
+  let playbackListeners;
 
-  // Center a nine-second loop within OVO's 30-second SoundCloud preview.
-  const previewLength = 30_000;
-  const clipLength = 9_000;
-  const start = (previewLength - clipLength) / 2;
-  const end = start + clipLength;
-  const interactionRetry = new AbortController();
-  let widget;
-  let ready = false;
-  let autoplayPending = true;
-  let wantsPlayback = false;
-  let playing = false;
-  let lastSeek = -Infinity;
-  let autoplayHint;
-
-  function setStatus(message = "") {
-    status.textContent = message;
-    status.hidden = message === "";
+  function stopSoundtrack() {
+    playbackListeners?.abort();
+    mount.replaceChildren();
+    frame = undefined;
+    soundtrack.classList.remove("is-playing");
   }
 
-  function setPlaying(next) {
-    playing = next;
-    play.textContent = next ? "Pause loop" : "Play loop";
-    soundtrack.classList.toggle("is-playing", next);
-  }
+  function openPlayer() {
+    const playback = new AbortController();
+    const retry = new AbortController();
+    playbackListeners = playback;
+    playback.signal.addEventListener("abort", () => retry.abort(), { once: true });
 
-  function seekToStart() {
-    lastSeek = performance.now();
-    widget.seekTo(start);
-  }
+    const player = createPlayer({
+      title: "Spotify player: Lose You by Drake",
+      url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
+      allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
+    });
+    let ready = false;
+    let autoplayPending = true;
 
-  function startLoop() {
-    wantsPlayback = true;
-    seekToStart();
-    widget.play();
-  }
-
-  function stopLoop() {
-    wantsPlayback = false;
-    autoplayPending = false;
-    interactionRetry.abort();
-    clearTimeout(autoplayHint);
-    if (ready) {
-      widget.pause();
-      setStatus();
+    function play() {
+      player.contentWindow?.postMessage({ command: "play" }, spotifyOrigin);
     }
-    setPlaying(false);
-  }
 
-  function tryAutoplay() {
-    if (!autoplayPending || !ready || soundtrack.hidden || document.hidden) return;
-    autoplayPending = false;
-    startLoop();
-    autoplayHint = setTimeout(() => {
-      if (!playing) setStatus("Click the page or press Play loop to start sound.");
-    }, 1200);
-  }
+    function tryAutoplay() {
+      if (!ready || !autoplayPending || document.hidden) return;
+      autoplayPending = false;
+      play();
+    }
 
-  function retryAfterInteraction(event) {
-    if (!event.isTrusted || !ready || playing || soundtrack.hidden || document.hidden) return;
-    if (event.type === "keydown" && (event.repeat || !["Enter", " "].includes(event.key))) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (!(event.target instanceof Element)) return;
-    if (event.target.closest(".sound-trigger, #soundtrack, [data-video], dialog, a[href]:not([href^='#'])")) return;
+    window.addEventListener("message", (event) => {
+      if (event.origin !== spotifyOrigin || event.source !== player.contentWindow) return;
 
-    interactionRetry.abort();
-    clearTimeout(autoplayHint);
-    setStatus();
-    startLoop();
+      if (event.data?.type === "ready" && !ready) {
+        ready = true;
+        event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
+        tryAutoplay();
+      }
+      if (event.data?.type === "playback_started") retry.abort();
+      if (event.data?.type === "playback_update" && typeof event.data.payload?.isPaused === "boolean") {
+        const playing = !event.data.payload.isPaused;
+        soundtrack.classList.toggle("is-playing", playing);
+        if (playing) retry.abort();
+      }
+    }, { signal: playback.signal });
+    document.addEventListener("visibilitychange", tryAutoplay, { signal: playback.signal });
+
+    document.addEventListener("click", (event) => {
+      if (!event.isTrusted || !ready || document.hidden || !(event.target instanceof Element)) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.target.closest(".sound-trigger, #soundtrack, [data-video], dialog, a[href]:not([href^='#'])")) return;
+      retry.abort();
+      play();
+    }, { signal: retry.signal });
+
+    mount.append(player);
+    frame = player;
   }
 
   function setOpen(open, moveFocus = true) {
     soundtrack.hidden = !open;
     trigger.setAttribute("aria-expanded", String(open));
-    if (!open) stopLoop();
+    if (open && !frame) openPlayer();
+    if (!open) stopSoundtrack();
     if (moveFocus) (open ? close : trigger).focus({ preventScroll: true });
   }
 
@@ -146,79 +138,8 @@ function setupSoundtrack() {
   soundtrack.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setOpen(false);
   });
-  play.addEventListener("click", () => {
-    interactionRetry.abort();
-    clearTimeout(autoplayHint);
-    setStatus();
-    if (playing) stopLoop();
-    else startLoop();
-  });
-  document.addEventListener("visibilitychange", tryAutoplay);
-  for (const type of ["click", "keydown"]) {
-    document.addEventListener(type, retryAfterInteraction, { signal: interactionRetry.signal });
-  }
 
-  const frame = createPlayer({
-    title: "Lose You preview from OVO on SoundCloud",
-    url: "https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F313167731&color=%23273391&show_artwork=false&show_comments=false",
-    allow: "autoplay; encrypted-media",
-  });
-  mount.append(frame);
-
-  const script = document.createElement("script");
-  script.src = "https://w.soundcloud.com/player/api.js";
-  script.addEventListener("load", () => {
-    widget = window.SC.Widget(frame);
-    const events = window.SC.Widget.Events;
-    widget.bind(events.READY, () => {
-      ready = true;
-      play.hidden = false;
-      tryAutoplay();
-    });
-    widget.bind(events.PLAY, () => {
-      if (soundtrack.hidden) {
-        widget.pause();
-        return;
-      }
-      if (!wantsPlayback) {
-        wantsPlayback = true;
-        seekToStart();
-      }
-    });
-    widget.bind(events.PLAY_PROGRESS, ({ currentPosition }) => {
-      if (!wantsPlayback || soundtrack.hidden) return;
-      if (currentPosition >= end || currentPosition < start - 650) {
-        if (performance.now() - lastSeek > 350) seekToStart();
-        return;
-      }
-      // A seek alone can emit progress. Wait for movement before showing Pause.
-      if (!playing && currentPosition > start + 180) {
-        interactionRetry.abort();
-        clearTimeout(autoplayHint);
-        setPlaying(true);
-        setStatus();
-      }
-    });
-    widget.bind(events.PAUSE, () => {
-      wantsPlayback = false;
-      setPlaying(false);
-    });
-    widget.bind(events.FINISH, () => {
-      if (wantsPlayback && !soundtrack.hidden) startLoop();
-    });
-    widget.bind(events.ERROR, () => {
-      stopLoop();
-      play.hidden = true;
-      setStatus("SoundCloud preview is unavailable.");
-    });
-  }, { once: true });
-  script.addEventListener("error", () => {
-    interactionRetry.abort();
-    setStatus("Use SoundCloud’s Play button to hear the preview.");
-  }, { once: true });
-  document.head.append(script);
-
-  return stopLoop;
+  return () => setOpen(false, false);
 }
 
 function setupMedia() {
