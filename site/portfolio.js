@@ -66,12 +66,14 @@ function setupSoundtrack() {
   const clipLength = 9000;
   const start = 1500 + Math.floor(Math.random() * 18_001);
   const end = start + clipLength;
+  const interactionRetry = new AbortController();
   let widget;
   let ready = false;
   let autoplayPending = true;
   let wantsPlayback = false;
   let playing = false;
   let lastSeek = -Infinity;
+  let autoplayHint;
 
   function setStatus(message = "") {
     status.textContent = message;
@@ -98,13 +100,34 @@ function setupSoundtrack() {
   function stopLoop() {
     wantsPlayback = false;
     autoplayPending = false;
-    if (ready) widget.pause();
+    interactionRetry.abort();
+    clearTimeout(autoplayHint);
+    if (ready) {
+      widget.pause();
+      setStatus();
+    }
     setPlaying(false);
   }
 
   function tryAutoplay() {
     if (!autoplayPending || !ready || soundtrack.hidden || document.hidden) return;
     autoplayPending = false;
+    startLoop();
+    autoplayHint = setTimeout(() => {
+      if (!playing) setStatus("Click the page or press Play loop to start sound.");
+    }, 1200);
+  }
+
+  function retryAfterInteraction(event) {
+    if (!event.isTrusted || !ready || playing || soundtrack.hidden || document.hidden) return;
+    if (event.type === "keydown" && (event.repeat || !["Enter", " "].includes(event.key))) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!(event.target instanceof Element)) return;
+    if (event.target.closest(".sound-trigger, #soundtrack, [data-video], dialog, a[href]:not([href^='#'])")) return;
+
+    interactionRetry.abort();
+    clearTimeout(autoplayHint);
+    setStatus();
     startLoop();
   }
 
@@ -123,10 +146,16 @@ function setupSoundtrack() {
     if (event.key === "Escape") setOpen(false);
   });
   play.addEventListener("click", () => {
+    interactionRetry.abort();
+    clearTimeout(autoplayHint);
+    setStatus();
     if (playing) stopLoop();
     else startLoop();
   });
   document.addEventListener("visibilitychange", tryAutoplay);
+  for (const type of ["click", "keydown"]) {
+    document.addEventListener(type, retryAfterInteraction, { signal: interactionRetry.signal });
+  }
 
   const frame = createPlayer({
     title: "Lose You preview from OVO on SoundCloud",
@@ -163,6 +192,8 @@ function setupSoundtrack() {
       }
       // A seek alone can emit progress. Wait for movement before showing Pause.
       if (!playing && currentPosition > start + 180) {
+        interactionRetry.abort();
+        clearTimeout(autoplayHint);
         setPlaying(true);
         setStatus();
       }
@@ -181,6 +212,7 @@ function setupSoundtrack() {
     });
   }, { once: true });
   script.addEventListener("error", () => {
+    interactionRetry.abort();
     setStatus("Use SoundCloud’s Play button to hear the preview.");
   }, { once: true });
   document.head.append(script);
