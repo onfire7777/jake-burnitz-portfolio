@@ -11,8 +11,7 @@
   <meta property="og:url" content="https://jakeburnitz.me/">
   <link rel="canonical" href="https://jakeburnitz.me/">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="preload" href="assets/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" fetchpriority="high">
   <script type="module" src="portfolio.js"></script>
   <title>Jake Burnitz — Developer &amp; creator</title>
 </head>
@@ -45,8 +44,10 @@
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="art-grid"></div>
-        <div class="orbit-fallback"></div>
-        <canvas id="orbit"></canvas>
+        <picture class="orbit">
+          <source media="(max-width: 520px)" srcset="assets/orbit-small.webp">
+          <img src="assets/orbit.webp" alt="" width="1024" height="1024">
+        </picture>
         <div class="art-edge bottom-left"></div><div class="art-edge bottom-right"></div>
         <div class="axis axis-x"></div><div class="axis axis-y"></div>
       </div>
@@ -104,7 +105,10 @@
         </div>
         <figure class="film-feature">
           <a class="film-cover" data-video href="https://www.youtube.com/watch?v=l3USuXat848" aria-labelledby="title-ben-lang-luigi">
-            <img src="assets/ben-lang-luigi.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            <picture>
+              <source type="image/webp" srcset="assets/ben-lang-luigi-640.webp 640w, assets/ben-lang-luigi.webp 1280w" sizes="auto, (max-width: 720px) 85vw, (max-width: 1400px) 44vw, 610px">
+              <img src="assets/ben-lang-luigi.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            </picture>
             <span class="film-play" aria-hidden="true">▶</span>
           </a>
           <figcaption id="title-ben-lang-luigi">Ben Lang Luigi: It's EASY to KNOW the TRUE CHURCH!</figcaption>
@@ -143,7 +147,10 @@
         </div>
         <figure class="film-feature">
           <a class="film-cover" data-video href="https://www.youtube.com/watch?v=zH-5KSr86Ak" aria-labelledby="title-burnos-demo">
-            <img src="assets/burnos-demo.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            <picture>
+              <source type="image/webp" srcset="assets/burnos-demo-640.webp 640w, assets/burnos-demo.webp 1280w" sizes="auto, (max-width: 720px) 85vw, (max-width: 1000px) 31vw, 410px">
+              <img src="assets/burnos-demo.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async">
+            </picture>
             <span class="film-play" aria-hidden="true">▶</span>
           </a>
           <figcaption id="title-burnos-demo">BurnOS at the Alexa+ Hackathon</figcaption>
