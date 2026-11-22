@@ -62,9 +62,10 @@ function setupSoundtrack() {
   const play = document.getElementById("soundtrack-play");
   const status = document.getElementById("soundtrack-status");
 
-  // OVO's SoundCloud track exposes a 30-second preview in the embedded player.
-  const clipLength = 9000;
-  const start = 1500 + Math.floor(Math.random() * 18_001);
+  // Center a nine-second loop within OVO's 30-second SoundCloud preview.
+  const previewLength = 30_000;
+  const clipLength = 9_000;
+  const start = (previewLength - clipLength) / 2;
   const end = start + clipLength;
   const interactionRetry = new AbortController();
   let widget;
