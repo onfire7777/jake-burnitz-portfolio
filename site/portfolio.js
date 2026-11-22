@@ -58,22 +58,61 @@ function setupSoundtrack() {
   const trigger = document.querySelector(".sound-trigger");
   const soundtrack = document.getElementById("soundtrack");
   const close = document.getElementById("close-soundtrack");
-  const link = document.getElementById("soundtrack-link");
+  const mount = document.getElementById("soundtrack-player");
+  const play = document.getElementById("soundtrack-play");
+  const status = document.getElementById("soundtrack-status");
 
-  // Choose an interior timestamp once per visit. The official recording runs 5:05.
-  const firstSecond = 20;
-  const lastSecond = 280;
-  const start = firstSecond + Math.floor(Math.random() * (lastSecond - firstSecond + 1));
-  const url = new URL(link.href);
-  url.searchParams.set("t", `${start}s`);
-  link.href = url.href;
+  // OVO's SoundCloud track exposes a 30-second preview in the embedded player.
+  const clipLength = 9000;
+  const start = 1500 + Math.floor(Math.random() * 18_001);
+  const end = start + clipLength;
+  let widget;
+  let ready = false;
+  let autoplayPending = true;
+  let wantsPlayback = false;
+  let playing = false;
+  let lastSeek = -Infinity;
+
+  function setStatus(message = "") {
+    status.textContent = message;
+    status.hidden = message === "";
+  }
+
+  function setPlaying(next) {
+    playing = next;
+    play.textContent = next ? "Pause loop" : "Play loop";
+    soundtrack.classList.toggle("is-playing", next);
+  }
+
+  function seekToStart() {
+    lastSeek = performance.now();
+    widget.seekTo(start);
+  }
+
+  function startLoop() {
+    wantsPlayback = true;
+    seekToStart();
+    widget.play();
+  }
+
+  function stopLoop() {
+    wantsPlayback = false;
+    autoplayPending = false;
+    if (ready) widget.pause();
+    setPlaying(false);
+  }
+
+  function tryAutoplay() {
+    if (!autoplayPending || !ready || soundtrack.hidden || document.hidden) return;
+    autoplayPending = false;
+    startLoop();
+  }
 
   function setOpen(open, moveFocus = true) {
     soundtrack.hidden = !open;
     trigger.setAttribute("aria-expanded", String(open));
-    if (moveFocus) {
-      (open ? close : trigger).focus({ preventScroll: true });
-    }
+    if (!open) stopLoop();
+    if (moveFocus) (open ? close : trigger).focus({ preventScroll: true });
   }
 
   trigger.hidden = false;
@@ -83,10 +122,74 @@ function setupSoundtrack() {
   soundtrack.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setOpen(false);
   });
+  play.addEventListener("click", () => {
+    if (playing) stopLoop();
+    else startLoop();
+  });
+  document.addEventListener("visibilitychange", tryAutoplay);
+
+  const frame = createPlayer({
+    title: "Lose You preview from OVO on SoundCloud",
+    url: "https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F313167731&color=%23273391&show_artwork=false&show_comments=false",
+    allow: "autoplay; encrypted-media",
+  });
+  mount.append(frame);
+
+  const script = document.createElement("script");
+  script.src = "https://w.soundcloud.com/player/api.js";
+  script.addEventListener("load", () => {
+    widget = window.SC.Widget(frame);
+    const events = window.SC.Widget.Events;
+    widget.bind(events.READY, () => {
+      ready = true;
+      play.hidden = false;
+      tryAutoplay();
+    });
+    widget.bind(events.PLAY, () => {
+      if (soundtrack.hidden) {
+        widget.pause();
+        return;
+      }
+      if (!wantsPlayback) {
+        wantsPlayback = true;
+        seekToStart();
+      }
+    });
+    widget.bind(events.PLAY_PROGRESS, ({ currentPosition }) => {
+      if (!wantsPlayback || soundtrack.hidden) return;
+      if (currentPosition >= end || currentPosition < start - 650) {
+        if (performance.now() - lastSeek > 350) seekToStart();
+        return;
+      }
+      // A seek alone can emit progress. Wait for movement before showing Pause.
+      if (!playing && currentPosition > start + 180) {
+        setPlaying(true);
+        setStatus();
+      }
+    });
+    widget.bind(events.PAUSE, () => {
+      wantsPlayback = false;
+      setPlaying(false);
+    });
+    widget.bind(events.FINISH, () => {
+      if (wantsPlayback && !soundtrack.hidden) startLoop();
+    });
+    widget.bind(events.ERROR, () => {
+      stopLoop();
+      play.hidden = true;
+      setStatus("SoundCloud preview is unavailable.");
+    });
+  }, { once: true });
+  script.addEventListener("error", () => {
+    setStatus("Use SoundCloud’s Play button to hear the preview.");
+  }, { once: true });
+  document.head.append(script);
+
+  return stopLoop;
 }
 
 function setupMedia() {
-  setupSoundtrack();
+  const stopSoundtrack = setupSoundtrack();
   const videoDialog = document.getElementById("video-dialog");
   const videoPlayer = document.getElementById("video-player");
   const videoTitle = document.getElementById("video-title");
@@ -104,6 +207,7 @@ function setupMedia() {
     activeVideoLink = link;
     videoTitle.textContent = label.textContent;
     videoSource.href = link.href;
+    stopSoundtrack();
     videoDialog.showModal();
     videoPlayer.append(createYouTubePlayer(videoId, videoTitle.textContent));
   });

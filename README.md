@@ -10,7 +10,7 @@ From the repository root, run:
 python3 -m http.server 8000 --directory site
 ```
 
-Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack widget opens on arrival and links to the official YouTube upload at a randomly selected timestamp. YouTube disables embedding for the recording. Portfolio videos load when selected.
+Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack opens on arrival, selects a nine-second excerpt of the official SoundCloud preview, and loops it using the SoundCloud Widget API. Browsers that block audible autoplay require a click on Play loop. Portfolio videos load when selected.
 
 ## Edit and deploy
 
