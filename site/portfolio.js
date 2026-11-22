@@ -1,8 +1,5 @@
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
-// Add URLs for clips cleared for playback on this public site.
-const soundtrackClips = [];
-
 function setupReveals() {
   if (reducedMotion.matches || !("IntersectionObserver" in window)) return;
 
@@ -61,76 +58,22 @@ function setupSoundtrack() {
   const trigger = document.querySelector(".sound-trigger");
   const soundtrack = document.getElementById("soundtrack");
   const close = document.getElementById("close-soundtrack");
-  const preview = document.getElementById("soundtrack-preview");
-  const previewPlayer = document.getElementById("soundtrack-player");
-  const audio = document.getElementById("soundtrack-audio");
-  const play = document.getElementById("soundtrack-play");
-  const progress = document.getElementById("soundtrack-progress");
-  const status = document.getElementById("soundtrack-status");
-  const spotifyOrigin = "https://open.spotify.com";
-  let previewEvents;
+  const link = document.getElementById("soundtrack-link");
 
-  function setStatus(message = "") {
-    status.textContent = message;
-    status.hidden = message === "";
-  }
-
-  function hidePreview() {
-    previewEvents?.abort();
-    previewPlayer.replaceChildren();
-    previewPlayer.hidden = true;
-    preview.setAttribute("aria-expanded", "false");
-  }
-
-  function pauseSoundtrack() {
-    audio.pause();
-    hidePreview();
-  }
+  // Choose an interior timestamp once per visit. The official recording runs 5:05.
+  const firstSecond = 20;
+  const lastSecond = 280;
+  const start = firstSecond + Math.floor(Math.random() * (lastSecond - firstSecond + 1));
+  const url = new URL(link.href);
+  url.searchParams.set("t", `${start}s`);
+  link.href = url.href;
 
   function setOpen(open, moveFocus = true) {
     soundtrack.hidden = !open;
     trigger.setAttribute("aria-expanded", String(open));
-    if (open) {
-      if (moveFocus) close.focus();
-    } else {
-      pauseSoundtrack();
-      trigger.focus({ preventScroll: true });
+    if (moveFocus) {
+      (open ? close : trigger).focus({ preventScroll: true });
     }
-  }
-
-  function showPreview() {
-    audio.pause();
-    setStatus();
-    const player = createPlayer({
-      title: "Spotify preview: Lose You by Drake",
-      url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
-      allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
-    });
-    const events = new AbortController();
-    previewEvents = events;
-
-    // Ask Spotify to start, then leave playback to its built-in controls.
-    window.addEventListener("message", (event) => {
-      if (event.origin !== spotifyOrigin || event.source !== player.contentWindow || event.data?.type !== "ready") return;
-      event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
-      event.source.postMessage({ command: "play" }, spotifyOrigin);
-      events.abort();
-    }, { signal: events.signal });
-
-    previewPlayer.hidden = false;
-    previewPlayer.append(player);
-    preview.setAttribute("aria-expanded", "true");
-  }
-
-  function playClip() {
-    hidePreview();
-    setStatus();
-    audio.play().catch((error) => {
-      if (soundtrack.hidden || error.name === "AbortError") return;
-      setStatus(error.name === "NotAllowedError"
-        ? "Press Play to start the loop."
-        : "The clip couldn’t play. Spotify preview is available.");
-    });
   }
 
   trigger.hidden = false;
@@ -140,41 +83,10 @@ function setupSoundtrack() {
   soundtrack.addEventListener("keydown", (event) => {
     if (event.key === "Escape") setOpen(false);
   });
-  preview.addEventListener("click", () => {
-    if (previewPlayer.hidden) showPreview();
-    else hidePreview();
-  });
-
-  if (soundtrackClips.length) {
-    audio.src = soundtrackClips[Math.floor(Math.random() * soundtrackClips.length)];
-    play.hidden = false;
-    progress.hidden = false;
-    play.addEventListener("click", () => {
-      if (audio.paused) playClip();
-      else audio.pause();
-    });
-    audio.addEventListener("playing", () => {
-      play.textContent = "Pause";
-      soundtrack.classList.add("is-playing");
-      setStatus();
-    });
-    audio.addEventListener("pause", () => {
-      play.textContent = "Play";
-      soundtrack.classList.remove("is-playing");
-    });
-    audio.addEventListener("timeupdate", () => {
-      if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        progress.value = audio.currentTime / audio.duration;
-      }
-    });
-    playClip();
-  }
-
-  return pauseSoundtrack;
 }
 
 function setupMedia() {
-  const pauseSoundtrack = setupSoundtrack();
+  setupSoundtrack();
   const videoDialog = document.getElementById("video-dialog");
   const videoPlayer = document.getElementById("video-player");
   const videoTitle = document.getElementById("video-title");
@@ -192,7 +104,6 @@ function setupMedia() {
     activeVideoLink = link;
     videoTitle.textContent = label.textContent;
     videoSource.href = link.href;
-    pauseSoundtrack();
     videoDialog.showModal();
     videoPlayer.append(createYouTubePlayer(videoId, videoTitle.textContent));
   });

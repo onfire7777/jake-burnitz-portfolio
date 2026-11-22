@@ -10,7 +10,7 @@ From the repository root, run:
 python3 -m http.server 8000 --directory site
 ```
 
-Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack widget opens on arrival and offers the official Spotify preview. Portfolio videos load when selected.
+Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack widget opens on arrival and links to the official YouTube upload at a randomly selected timestamp. YouTube disables embedding for the recording. Portfolio videos load when selected.
 
 ## Edit and deploy
 
@@ -21,7 +21,3 @@ To publish changes from an authorized Cloudflare account:
 ```sh
 npx wrangler deploy
 ```
-
-## Soundtrack clips
-
-To enable the site’s native looping player, add audio clips cleared for public playback to `site/assets/` and list their URLs in `soundtrackClips` in `site/portfolio.js`. The player selects one clip per page load and loops it. If the browser blocks audible autoplay, the Play button starts the selected clip.
