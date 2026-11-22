@@ -167,8 +167,8 @@ h2 { margin-top: .42rem; font: 400 clamp(2.85rem, 6.4vw, 5.6rem)/.95 var(--serif
 .text-link span { color: var(--accent); }
 
 .project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.project { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--panel); transition: border-color 240ms ease, box-shadow 240ms ease; }
-.project:hover, .project:focus-within { border-color: #a8a0c9; box-shadow: 0 8px 28px #46395213; }
+.project { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--panel); transition: border-color 180ms ease; }
+.project:hover, .project:focus-within { border-color: #a8a0c9; }
 .project-art { position: relative; overflow: hidden; display: grid; min-height: 165px; aspect-ratio: 1.8; place-items: center; border-bottom: 1px solid var(--border); }
 .project-art::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(#54476a1b 1px, transparent 1px), linear-gradient(90deg, #54476a1b 1px, transparent 1px); background-size: 24px 24px; mask-image: linear-gradient(transparent, #000); }
 .art-caption { position: absolute; top: 13px; left: 14px; color: #53445d; font: .75rem/1.2 var(--mono); }
@@ -321,7 +321,6 @@ dialog::backdrop { background: rgb(33 29 43 / .68); }
 body:has(dialog[open]) { overflow: hidden; }
 
 @keyframes settle-in { from { transform: translateY(5px); } }
-.reveal.arrived { animation: settle-in 220ms var(--ease); }
 
 @media (max-width: 1000px) {
   .shell { width: 90%; }

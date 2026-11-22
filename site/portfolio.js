@@ -1,21 +1,3 @@
-const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-
-function setupReveals() {
-  if (reducedMotion.matches || !("IntersectionObserver" in window)) return;
-
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      entry.target.classList.add("arrived");
-      observer.unobserve(entry.target);
-    }
-  }, { rootMargin: "0px 0px -12px 0px" });
-
-  for (const item of document.querySelectorAll(".reveal")) {
-    observer.observe(item);
-  }
-}
-
 function setupSectionLinks() {
   if (!("IntersectionObserver" in window)) return;
 
@@ -201,5 +183,4 @@ function setupMedia() {
 }
 
 setupMedia();
-setupReveals();
 setupSectionLinks();
