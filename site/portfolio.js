@@ -102,11 +102,13 @@ function setupSoundtrack() {
         event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
         tryAutoplay();
       }
-      if (event.data?.type === "playback_started") retry.abort();
-      if (event.data?.type === "playback_update" && typeof event.data.payload?.isPaused === "boolean") {
-        const playing = !event.data.payload.isPaused;
-        soundtrack.classList.toggle("is-playing", playing);
-        if (playing) retry.abort();
+      if (event.data?.type === "playback_update") {
+        const state = event.data.payload;
+        if (state?.isPaused === true) soundtrack.classList.remove("is-playing");
+        if (state?.isPaused === false && !state.isBuffering && state.position > 0 && state.duration > 0) {
+          soundtrack.classList.add("is-playing");
+          retry.abort();
+        }
       }
     }, { signal: playback.signal });
     document.addEventListener("visibilitychange", tryAutoplay, { signal: playback.signal });
