@@ -1,6 +1,6 @@
 # Jake Burnitz Portfolio
 
-The source for [jakeburnitz.me](https://jakeburnitz.me/), including featured software projects, BurnFilmz videos, and an optional Spotify soundtrack.
+The source for [jakeburnitz.me](https://jakeburnitz.me/), including featured software projects, BurnFilmz videos, and a site soundtrack.
 
 ## Preview locally
 
@@ -10,7 +10,7 @@ From the repository root, run:
 python3 -m http.server 8000 --directory site
 ```
 
-Open [localhost:8000](http://localhost:8000/). All page assets are local. YouTube and Spotify load their players only after a visitor opens them.
+Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack loads on arrival and requests autoplay. Visitors can start playback from Spotify’s player if their browser blocks it. Portfolio videos load when selected.
 
 ## Edit and deploy
 

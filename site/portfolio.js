@@ -46,6 +46,14 @@ function createPlayer({ title, url, allow }) {
   return player;
 }
 
+function createYouTubePlayer(videoId, title) {
+  return createPlayer({
+    title,
+    url: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1`,
+    allow: "autoplay; encrypted-media; picture-in-picture; fullscreen",
+  });
+}
+
 function setupMedia() {
   const trigger = document.querySelector(".sound-trigger");
   const soundtrack = document.getElementById("soundtrack");
@@ -56,25 +64,41 @@ function setupMedia() {
   const videoTitle = document.getElementById("video-title");
   const videoSource = document.getElementById("video-source");
   let activeVideoLink;
+  let soundtrackEvents;
+  const spotifyOrigin = "https://open.spotify.com";
 
-  function showSoundtrack(open) {
-    if (open && !soundtrackPlayer.firstElementChild) {
-      soundtrackPlayer.append(createPlayer({
+  function showSoundtrack(open, moveFocus = true) {
+    if (open) {
+      soundtrack.hidden = false;
+      const player = createPlayer({
         title: "Spotify player: Lose You by Drake",
-        url: "https://open.spotify.com/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0",
+        url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
         allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
-      }));
-    }
+      });
 
-    if (!open) trigger.focus();
-    soundtrack.hidden = false;
-    soundtrack.inert = !open;
-    soundtrack.dataset.minimized = String(!open);
+      // Keep Spotify code inside its iframe. Its message protocol is best effort,
+      // and the native Play control also works when autoplay is blocked.
+      const events = new AbortController();
+      soundtrackEvents = events;
+      window.addEventListener("message", (event) => {
+        if (event.origin !== spotifyOrigin || event.source !== player.contentWindow || event.data?.type !== "ready") return;
+        event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
+        if (!videoDialog.open) event.source.postMessage({ command: "play" }, spotifyOrigin);
+        events.abort();
+      }, { signal: events.signal });
+      soundtrackPlayer.append(player);
+      if (moveFocus) closeSoundtrack.focus();
+    } else {
+      trigger.focus({ preventScroll: true });
+      soundtrack.hidden = true;
+      soundtrackEvents.abort();
+      soundtrackPlayer.replaceChildren();
+    }
     trigger.setAttribute("aria-expanded", String(open));
-    if (open) closeSoundtrack.focus();
   }
 
   trigger.hidden = false;
+  showSoundtrack(true, false);
   trigger.addEventListener("click", () => showSoundtrack(trigger.getAttribute("aria-expanded") !== "true"));
   closeSoundtrack.addEventListener("click", () => showSoundtrack(false));
   soundtrack.addEventListener("keydown", (event) => {
@@ -92,12 +116,9 @@ function setupMedia() {
     activeVideoLink = link;
     videoTitle.textContent = label.textContent;
     videoSource.href = link.href;
+    soundtrackPlayer.querySelector("iframe")?.contentWindow.postMessage({ command: "pause" }, spotifyOrigin);
     videoDialog.showModal();
-    videoPlayer.append(createPlayer({
-      title: videoTitle.textContent,
-      url: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1`,
-      allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share",
-    }));
+    videoPlayer.append(createYouTubePlayer(videoId, videoTitle.textContent));
   });
   videoDialog.addEventListener("close", () => {
     videoPlayer.replaceChildren();
@@ -113,7 +134,7 @@ function setupOrbit() {
   const art = canvas.parentElement;
   const tau = 2 * Math.PI;
   const points = [];
-  const colors = ["#597542", "#8dbc59", "#b8ec77", "#dcffae"];
+  const colors = ["#b08362", "#af6d4b", "#6959a9", "#2b3fa9"];
   let bounds;
   let frame = 0;
   let visible = true;
@@ -157,7 +178,7 @@ function setupOrbit() {
     context.save();
     context.translate(centerX, centerY);
     context.rotate(slant);
-    context.strokeStyle = "#93bd5c42";
+    context.strokeStyle = "#2b3fa95d";
     context.setLineDash([2, 6]);
     context.beginPath();
     context.ellipse(0, 0, scale * 1.5, scale * 0.86, 0, 0, tau);
