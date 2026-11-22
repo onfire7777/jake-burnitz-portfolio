@@ -1,5 +1,8 @@
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
+// Add URLs for clips cleared for playback on this public site.
+const soundtrackClips = [];
+
 function setupReveals() {
   if (reducedMotion.matches || !("IntersectionObserver" in window)) return;
 
@@ -54,56 +57,129 @@ function createYouTubePlayer(videoId, title) {
   });
 }
 
-function setupMedia() {
+function setupSoundtrack() {
   const trigger = document.querySelector(".sound-trigger");
   const soundtrack = document.getElementById("soundtrack");
-  const closeSoundtrack = document.getElementById("close-soundtrack");
-  const soundtrackPlayer = document.getElementById("soundtrack-player");
+  const close = document.getElementById("close-soundtrack");
+  const preview = document.getElementById("soundtrack-preview");
+  const previewPlayer = document.getElementById("soundtrack-player");
+  const audio = document.getElementById("soundtrack-audio");
+  const play = document.getElementById("soundtrack-play");
+  const progress = document.getElementById("soundtrack-progress");
+  const status = document.getElementById("soundtrack-status");
+  const spotifyOrigin = "https://open.spotify.com";
+  let previewEvents;
+
+  function setStatus(message = "") {
+    status.textContent = message;
+    status.hidden = message === "";
+  }
+
+  function hidePreview() {
+    previewEvents?.abort();
+    previewPlayer.replaceChildren();
+    previewPlayer.hidden = true;
+    preview.setAttribute("aria-expanded", "false");
+  }
+
+  function pauseSoundtrack() {
+    audio.pause();
+    hidePreview();
+  }
+
+  function setOpen(open, moveFocus = true) {
+    soundtrack.hidden = !open;
+    trigger.setAttribute("aria-expanded", String(open));
+    if (open) {
+      if (moveFocus) close.focus();
+    } else {
+      pauseSoundtrack();
+      trigger.focus({ preventScroll: true });
+    }
+  }
+
+  function showPreview() {
+    audio.pause();
+    setStatus();
+    const player = createPlayer({
+      title: "Spotify preview: Lose You by Drake",
+      url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
+      allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
+    });
+    const events = new AbortController();
+    previewEvents = events;
+
+    // Ask Spotify to start, then leave playback to its built-in controls.
+    window.addEventListener("message", (event) => {
+      if (event.origin !== spotifyOrigin || event.source !== player.contentWindow || event.data?.type !== "ready") return;
+      event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
+      event.source.postMessage({ command: "play" }, spotifyOrigin);
+      events.abort();
+    }, { signal: events.signal });
+
+    previewPlayer.hidden = false;
+    previewPlayer.append(player);
+    preview.setAttribute("aria-expanded", "true");
+  }
+
+  function playClip() {
+    hidePreview();
+    setStatus();
+    audio.play().catch((error) => {
+      if (soundtrack.hidden || error.name === "AbortError") return;
+      setStatus(error.name === "NotAllowedError"
+        ? "Press Play to start the loop."
+        : "The clip couldn’t play. Spotify preview is available.");
+    });
+  }
+
+  trigger.hidden = false;
+  setOpen(true, false);
+  trigger.addEventListener("click", () => setOpen(soundtrack.hidden));
+  close.addEventListener("click", () => setOpen(false));
+  soundtrack.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setOpen(false);
+  });
+  preview.addEventListener("click", () => {
+    if (previewPlayer.hidden) showPreview();
+    else hidePreview();
+  });
+
+  if (soundtrackClips.length) {
+    audio.src = soundtrackClips[Math.floor(Math.random() * soundtrackClips.length)];
+    play.hidden = false;
+    progress.hidden = false;
+    play.addEventListener("click", () => {
+      if (audio.paused) playClip();
+      else audio.pause();
+    });
+    audio.addEventListener("playing", () => {
+      play.textContent = "Pause";
+      soundtrack.classList.add("is-playing");
+      setStatus();
+    });
+    audio.addEventListener("pause", () => {
+      play.textContent = "Play";
+      soundtrack.classList.remove("is-playing");
+    });
+    audio.addEventListener("timeupdate", () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        progress.value = audio.currentTime / audio.duration;
+      }
+    });
+    playClip();
+  }
+
+  return pauseSoundtrack;
+}
+
+function setupMedia() {
+  const pauseSoundtrack = setupSoundtrack();
   const videoDialog = document.getElementById("video-dialog");
   const videoPlayer = document.getElementById("video-player");
   const videoTitle = document.getElementById("video-title");
   const videoSource = document.getElementById("video-source");
   let activeVideoLink;
-  let soundtrackEvents;
-  const spotifyOrigin = "https://open.spotify.com";
-
-  function showSoundtrack(open, moveFocus = true) {
-    if (open) {
-      soundtrack.hidden = false;
-      const player = createPlayer({
-        title: "Spotify player: Lose You by Drake",
-        url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
-        allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
-      });
-
-      // Keep Spotify code inside its iframe. Its message protocol is best effort,
-      // and the native Play control also works when autoplay is blocked.
-      const events = new AbortController();
-      soundtrackEvents = events;
-      window.addEventListener("message", (event) => {
-        if (event.origin !== spotifyOrigin || event.source !== player.contentWindow || event.data?.type !== "ready") return;
-        event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
-        if (!videoDialog.open) event.source.postMessage({ command: "play" }, spotifyOrigin);
-        events.abort();
-      }, { signal: events.signal });
-      soundtrackPlayer.append(player);
-      if (moveFocus) closeSoundtrack.focus();
-    } else {
-      trigger.focus({ preventScroll: true });
-      soundtrack.hidden = true;
-      soundtrackEvents.abort();
-      soundtrackPlayer.replaceChildren();
-    }
-    trigger.setAttribute("aria-expanded", String(open));
-  }
-
-  trigger.hidden = false;
-  showSoundtrack(true, false);
-  trigger.addEventListener("click", () => showSoundtrack(trigger.getAttribute("aria-expanded") !== "true"));
-  closeSoundtrack.addEventListener("click", () => showSoundtrack(false));
-  soundtrack.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") showSoundtrack(false);
-  });
 
   if (typeof videoDialog.showModal !== "function") return;
   document.getElementById("videos").addEventListener("click", (event) => {
@@ -116,7 +192,7 @@ function setupMedia() {
     activeVideoLink = link;
     videoTitle.textContent = label.textContent;
     videoSource.href = link.href;
-    soundtrackPlayer.querySelector("iframe")?.contentWindow.postMessage({ command: "pause" }, spotifyOrigin);
+    pauseSoundtrack();
     videoDialog.showModal();
     videoPlayer.append(createYouTubePlayer(videoId, videoTitle.textContent));
   });

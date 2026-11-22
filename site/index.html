@@ -173,17 +173,24 @@
   </footer>
 
   <aside class="soundtrack" id="soundtrack" aria-labelledby="soundtrack-title" hidden>
+    <div class="soundtrack-record" aria-hidden="true"></div>
     <div class="soundtrack-details">
       <p class="eyebrow">Site soundtrack</p>
-      <h2 id="soundtrack-title">Lose You</h2>
-      <p class="soundtrack-artist">Drake</p>
+      <h2 id="soundtrack-title">Lose You <span class="soundtrack-artist">Drake</span></h2>
       <div class="soundtrack-links">
         <a href="https://open.spotify.com/track/2Na0z2gfN67Rzf0vp74Wi3" target="_blank" rel="noopener">Spotify</a>
         <a href="https://www.youtube.com/watch?v=oOhknvYJibs" target="_blank" rel="noopener">YouTube</a>
       </div>
     </div>
-    <button class="icon-button" id="close-soundtrack" type="button" aria-label="Close soundtrack and stop playback">×</button>
-    <div id="soundtrack-player"></div>
+    <button class="icon-button soundtrack-close" id="close-soundtrack" type="button" aria-label="Close soundtrack and stop playback">×</button>
+    <div class="soundtrack-actions">
+      <button class="button primary soundtrack-action" id="soundtrack-play" type="button" hidden>Play</button>
+      <button class="button secondary soundtrack-action" id="soundtrack-preview" type="button" aria-expanded="false" aria-controls="soundtrack-player">Spotify preview</button>
+      <p id="soundtrack-status" role="status" hidden></p>
+      <progress id="soundtrack-progress" aria-label="Soundtrack clip progress" max="1" value="0" hidden></progress>
+    </div>
+    <audio id="soundtrack-audio" preload="none" loop></audio>
+    <div id="soundtrack-player" hidden></div>
   </aside>
 
   <dialog id="video-dialog" aria-labelledby="video-title">
