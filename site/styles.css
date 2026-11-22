@@ -276,8 +276,8 @@ figcaption { margin-top: .65rem; font-size: .82rem; color: var(--muted); }
 .soundtrack-links a { color: var(--accent); font-size: .83rem; text-decoration: underline; text-underline-offset: .2em; }
 .soundtrack > .icon-button { grid-column: 2; grid-row: 1; align-self: start; }
 #soundtrack-player { grid-column: 1 / -1; }
-#soundtrack-player iframe { height: 152px; }
-body:has(.soundtrack:not([hidden])) .site-footer { padding-bottom: 15rem; }
+#soundtrack-player iframe { height: 80px; }
+body:has(.soundtrack:not([hidden])) .site-footer { padding-bottom: 11rem; }
 .media-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: .8rem; }
 .media-heading h2 { margin-top: .2rem; font-size: 1.9rem; letter-spacing: -.025em; }
 .icon-button {
@@ -309,8 +309,13 @@ body:has(dialog[open]) { overflow: hidden; }
 
 @media (max-width: 1000px) {
   .shell { width: 90%; }
-  .hero { min-height: min(625px, calc(100svh - 100px)); }
   .project-body { padding: 1.1rem; }
+}
+
+@media (min-width: 721px) {
+  .hero { min-height: min(650px, calc(100svh - 10rem)); padding-block: clamp(2.5rem, 6svh, 5rem); }
+  .hero-art { justify-self: center; width: min(100%, clamp(16rem, 64svh, 32rem)); }
+  h1 { font-size: clamp(5.25rem, min(13vw, 22svh), 12.3rem); }
 }
 
 @media (max-width: 720px) {
