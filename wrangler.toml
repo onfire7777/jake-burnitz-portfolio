@@ -1,10 +1,13 @@
 name = "jake-burnitz-portfolio"
+main = "worker/film.mjs"
 compatibility_date = "2026-11-17"
 workers_dev = false
 preview_urls = false
 
 [assets]
 directory = "./site"
+binding = "ASSETS"
+run_worker_first = ["/assets/signal/studio-film.mp4"]
 not_found_handling = "404-page"
 
 [[routes]]
