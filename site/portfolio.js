@@ -1,32 +1,50 @@
 function setupSectionLinks() {
   if (!("IntersectionObserver" in window)) return;
 
-  const links = [...document.querySelectorAll("nav a")];
-  const sections = links.map((link) => document.getElementById(link.hash.slice(1)));
-  const visible = new Set();
-  let footerVisible = false;
+  const header = document.querySelector(".site-header");
+  const footer = document.querySelector(".site-footer");
+  const links = [...header.querySelectorAll("nav a")];
+  const sections = links.map(link => document.getElementById(link.hash.slice(1)));
+  let observer;
+  let viewport = 0;
+  let readingLine = 0;
   let active;
+
   function markCurrent() {
-    const section = footerVisible ? sections.at(-1) : sections.findLast(item => visible.has(item));
+    // A short final chapter can meet the bottom of the page before its heading
+    // reaches the reading line. The footer supplies that last boundary.
+    const section = footer.getBoundingClientRect().bottom <= viewport + 1
+      ? sections.at(-1)
+      : sections.findLast(item => item.getBoundingClientRect().top <= readingLine + 1);
     if (active === section) return;
     active = section;
     links.forEach((link, index) => {
-      if (sections[index] === active) link.setAttribute("aria-current", "location");
+      if (sections[index] === section) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     });
   }
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) visible.add(entry.target);
-      else visible.delete(entry.target);
-    }
+
+  function observeAtReadingLine() {
+    const height = document.documentElement.clientHeight;
+    const line = Math.min(height - 1, Math.max(Math.ceil(header.offsetHeight) + 24, Math.round(height * .24)));
+    if (height === viewport && line === readingLine) return;
+    viewport = height;
+    readingLine = line;
+    observer?.disconnect();
+    // Pixel margins keep the trigger immediately below the header at every
+    // aspect ratio. Percentage root margins resolve against viewport width.
+    observer = new IntersectionObserver(markCurrent, {
+      rootMargin: `-${line}px 0px -${height - line - 1}px 0px`,
+    });
+    sections.forEach(section => observer.observe(section));
     markCurrent();
-  }, { rootMargin: "-39% 0px -59% 0px" });
-  sections.forEach(section => observer.observe(section));
-  new IntersectionObserver(([entry]) => {
-    footerVisible = entry.isIntersecting;
-    markCurrent();
-  }).observe(document.querySelector(".site-footer"));
+  }
+
+  observeAtReadingLine();
+  window.addEventListener("resize", observeAtReadingLine);
+  window.addEventListener("hashchange", markCurrent);
+  if ("ResizeObserver" in window) new ResizeObserver(observeAtReadingLine).observe(header);
+  new IntersectionObserver(markCurrent, { threshold: 1 }).observe(footer);
 }
 
 function createPlayer({ title, url, allow }) {
@@ -59,7 +77,7 @@ function setupSoundtrack() {
     playbackListeners?.abort();
     mount.replaceChildren();
     frame = undefined;
-    soundtrack.classList.remove("is-playing");
+    soundtrack.classList.remove("is-playing", "player-ready");
   }
 
   function openPlayer() {
@@ -73,6 +91,11 @@ function setupSoundtrack() {
       url: `${spotifyOrigin}/embed/track/2Na0z2gfN67Rzf0vp74Wi3?theme=0&utm_source=iframe-api`,
       allow: "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture",
     });
+    player.addEventListener("load", () => {
+      window.setTimeout(() => {
+        if (!playback.signal.aborted) soundtrack.classList.add("player-ready");
+      }, 650);
+    }, { once: true });
     let ready = false;
     let autoplayPending = true;
 
@@ -91,10 +114,12 @@ function setupSoundtrack() {
 
       if (event.data?.type === "ready" && !ready) {
         ready = true;
+        soundtrack.classList.add("player-ready");
         event.source.postMessage({ command: "load_complete_ack" }, spotifyOrigin);
         tryAutoplay();
       }
       if (event.data?.type === "playback_update") {
+        soundtrack.classList.add("player-ready");
         const state = event.data.payload;
         if (state?.isPaused === true) soundtrack.classList.remove("is-playing");
         if (state?.isPaused === false && !state.isBuffering && state.position > 0 && state.duration > 0) {
@@ -244,20 +269,30 @@ function setupRecorder() {
     }
     visibleView = view;
     visibleExploded = separate;
-    assembly.setAttribute("aria-pressed", String(separate));
-    angle.textContent = String(view * 10).padStart(3, "0") + "°";
-    stage.setAttribute("aria-valuenow", String(view * 10));
-    stage.setAttribute("aria-valuetext", view * 10 + " degrees");
+  }
+
+  function hasLiveModel() {
+    return stage.classList.contains("has-live-model");
+  }
+
+  function announceView() {
+    const degrees = requestedView * 10;
+    assembly.setAttribute("aria-pressed", String(exploded));
+    angle.textContent = String(degrees).padStart(3, "0") + "°";
+    stage.setAttribute("aria-valuenow", String(degrees));
+    stage.setAttribute("aria-valuetext", degrees + " degrees");
+    stage.dispatchEvent(new CustomEvent("recorder-view", { detail: { angle: degrees, exploded } }));
   }
 
   async function draw() {
-    if (loading) return;
+    if (loading || hasLiveModel()) return;
     loading = true;
     try {
       while (visibleView !== requestedView || exploded !== visibleExploded) {
         const view = requestedView;
         const separate = exploded;
         const image = !separate && view === 0 ? undefined : await loadView(view, separate);
+        if (hasLiveModel()) return;
         if (view === requestedView && separate === exploded) display(view, separate, image);
       }
       // Warm just the adjacent angles after an interaction.
@@ -265,8 +300,10 @@ function setupRecorder() {
         if (next || exploded) loadView(next, exploded).catch(() => {});
       }
     } catch {
+      if (hasLiveModel()) return;
       requestedView = visibleView;
       exploded = visibleExploded;
+      announceView();
       hint.textContent = "Couldn’t load view. Try again.";
     } finally {
       loading = false;
@@ -276,6 +313,8 @@ function setupRecorder() {
   function turn(view) {
     requestedView = wrap(view);
     hint.textContent = "Drag to rotate";
+    announceView();
+    if (hasLiveModel()) return;
     if (requestedView === 0 && !exploded) display(0, false);
     void draw();
   }
@@ -291,6 +330,7 @@ function setupRecorder() {
   stage.setAttribute("aria-valuetext", "0 degrees");
   controls.hidden = false;
   hint.hidden = false;
+  stage.addEventListener("recorder-fallback", draw);
 
   assembly.addEventListener("click", () => {
     exploded = !exploded;

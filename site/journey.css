@@ -1,0 +1,109 @@
+/* Every chapter sits on the same paper. The foil leaves the margin at each
+   splice and meets the next section at the identical physical coordinate. */
+:root {
+  --paper: #f5f1e7;
+  --surface: #f9f6ed;
+  --line: #c9c3b2;
+  --ink: #262721;
+  --muted: #55584e;
+  --rail-x: max(.48rem, calc((100% - min(1280px, 92%)) / 4));
+  --section-space: clamp(1.5rem, 4vw, 3.85rem);
+}
+body { background: var(--paper); }
+main#main { background: linear-gradient(110deg,#f7f4eb 0,#f5f1e7 50%,#f1ecdf 100%); }
+main#main::before { content: none; }
+main#main > section { background: transparent; border: 0; position: relative; }
+main#main > section::before {
+  content: ""; pointer-events: none; position: absolute; inset: 0 auto 0 calc(var(--rail-x) - 6px);
+  width: 16px; z-index: 2;
+  background: url("assets/installation/tape-edge.webp") left top / 16px 160px repeat-y;
+}
+.splice { position: relative; height: clamp(2.7rem,7vw,6.5rem); overflow: clip; }
+.splice-art { position: absolute; inset: 0 0 0 var(--rail-x); }
+.splice-art > img { width: 100%; height: 100%; }
+
+.opening .hero { min-height: min(46rem, 81svh); padding-block: clamp(2.25rem,5.2vw,5.25rem) var(--section-space); }
+.hero-copy, .hero-details { max-width: 41rem; }
+.hero-label { margin-bottom: clamp(1.2rem,2.3vw,2rem); }
+.studio-viewer { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.model-stage { background: transparent; }
+.model-stage .model-art { mask-image: radial-gradient(ellipse 77% 73% at center, black 49%, transparent 87%); }
+.view-corner { display: none; }
+.model-caption { background: transparent; border: 0; border-top: 1px solid var(--line); padding: .45rem 0; }
+.model-caption strong, .project .eyebrow, .hero-label, .signal-intro .eyebrow { letter-spacing: .065em; }
+.model-caption strong { font: .72rem/1.4 var(--mono); text-transform: uppercase; }
+.signal-section { padding-block: var(--section-space) 0; }
+.signal-pin { --signal-line: var(--line); }
+.signal-view { background: transparent; }
+.signal-shot { background: transparent; }
+.signal-shot:not(.screening) .signal-bench, .signal-shot:not(.screening) .signal-part,
+.signal-shot:not(.screening) .signal-strip {
+  mask-image: radial-gradient(ellipse 90% 80%,black 52%,transparent 92%);
+}
+.signal-shot.screening { background: transparent; }
+.signal-shot video { background: #242620; }
+.signal-intro .eyebrow { color: var(--rust); }
+.signal-trace { opacity: .85; }
+.workbench, .cinema, .patch-room { padding-block: var(--section-space); }
+.workbench .section-heading, .cinema .section-heading { margin-bottom: clamp(1.25rem, 2.6vw, 2.5rem); }
+.section-heading p, .links-intro { font-size: clamp(.98rem,1.15vw,1.08rem); line-height: 1.55; color: var(--muted); max-width: 46ch; }
+.section-heading h2, .link-section h2 { font-size: clamp(3rem, 5.8vw, 5.65rem); }
+.project-grid { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; gap: clamp(.8rem,2.8vw,2.8rem); }
+.project, .project-voice, .project + .project { border: 0; background: transparent; }
+.project .project-art { border: 0; }
+.project-art > img { mask-image: radial-gradient(ellipse 84% 87%,black 48%,transparent 90%); }
+.project-body { padding: 1.15rem 0 0; border-top: 1px solid var(--line); }
+.project-art .project-meter { z-index: 2; bottom: 8px; right: 0; width: 23%; box-shadow: none; }
+.project-links { gap: .45rem 1.3rem; }
+.cinema { overflow: clip; }
+.cinema-mast { margin: clamp(.6rem,1.6vw,1.3rem) 0 clamp(1.15rem,2.1vw,2.1rem); height: clamp(8rem,18vw,14.75rem); }
+.contact-art { inset: 0 -3%; }
+.screening-grid { background: transparent; border: 0; padding: 0; }
+.lead-film .film-cover { border-width: clamp(3px,.4vw,7px); }
+.lead-film figcaption, .video-grid { padding-inline: 0; }
+.demo-strip { margin-top: clamp(1.6rem,3vw,2.7rem); border-top: 1px solid var(--line); padding-top: 1.1rem; }
+.links-intro { margin: .75rem 0 0; }
+.link-section { gap: clamp(1.25rem,4.5vw,4.5rem); }
+.profile-link { border-color: var(--line); }
+.site-footer { background: var(--paper); border-top-color: var(--line); }
+.site-footer::before { left: calc(-1 * max(.48rem, (100vw - min(1280px,92vw)) / 4) - 3px); }
+
+/* Each view clips its own live canvas. The native HTML controls and captions
+   remain outside the drawing surface and keep their original hit areas. */
+[data-model] { isolation: isolate; }
+.model-canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
+.has-live-model .model-art, .has-live-model > .signal-layer, .has-live-model > img,
+.has-live-model > .contact-window, .has-live-model > .patch-lights { visibility: hidden; }
+.model-stage.has-live-model, .project-art.has-live-model, .signal-shot.has-live-model, .patch-art.has-live-model {
+  background: transparent;
+}
+.has-live-model.contact-art { animation: none; }
+.has-live-model .view-corner { display: none; }
+
+@media (max-width: 920px) {
+  .header-inner { gap: 1.55rem; }
+}
+@media (max-width: 760px) {
+  .opening .hero { min-height: 0; padding-block: 2.5rem 1.5rem; }
+  .studio-viewer { margin-top: .65rem; }
+  .splice { height: clamp(2.4rem,8vw,4.4rem); }
+  .section-heading { margin-bottom: 1rem; }
+  .signal-section { padding-block: 1.2rem 0; }
+  .project-grid { gap: 1.5rem; }
+  .project, .project-voice { grid-template-columns: minmax(100px,.8fr) minmax(0,1fr); border-top: 1px solid var(--line); align-items: center; gap: .85rem; }
+  .project + .project { border-top: 1px solid var(--line); }
+  .project .project-art, .project-voice .project-art { height: 100%; min-height: 11.5rem; width: 100%; aspect-ratio: auto; border: 0; }
+  .project-body { border: 0; padding: .9rem 0 .55rem; }
+  .project-art .project-meter { width: 45%; right: 4%; bottom: 2%; }
+  .cinema-mast { height: clamp(6.6rem,23vw,9.5rem); }
+  .contact-art { inset-inline: -18%; }
+  .links-heading { grid-template-areas: "heading art" "copy art"; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); row-gap: .4rem; }
+  .links-heading h2 { grid-area: heading; align-self: end; }
+  .links-intro { grid-area: copy; margin: 0; align-self: start; font-size: .91rem; }
+  .patch-art { grid-area: art; }
+}
+@media (max-width: 489px) {
+  .header-inner { gap: 0; }
+  .section-heading h2, .link-section h2 { font-size: clamp(2.7rem,11vw,3.5rem); }
+}
+.signal-shot.has-live-model .model-canvas { mask-image: linear-gradient(90deg, transparent, black 2.5%, black 97.5%, transparent); }

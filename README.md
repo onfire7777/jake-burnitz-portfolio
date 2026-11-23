@@ -1,6 +1,6 @@
 # Jake Burnitz Portfolio
 
-The source for [jakeburnitz.me](https://jakeburnitz.me/), including original 3D studio artwork, featured software projects, videos from both of Jake’s channels, and the Spotify soundtrack.
+The source for [jakeburnitz.me](https://jakeburnitz.me/), including articulated 3D studio models, featured software projects, videos from both of Jake’s channels, and the Spotify soundtrack.
 
 ## Preview locally
 
@@ -10,7 +10,7 @@ From the repository root, run:
 python3 -m http.server 8000 --directory site
 ```
 
-Open [localhost:8000](http://localhost:8000/). All page assets are local. The soundtrack opens on arrival with Spotify’s official player. The browser and Spotify determine autoplay and preview availability. Portfolio videos load when selected.
+Open [localhost:8000](http://localhost:8000/). The site serves its own fonts, models, lighting and artwork. The soundtrack opens on arrival with Spotify’s official player. The browser and Spotify determine autoplay and preview availability. Portfolio videos load when selected.
 
 ## Edit and deploy
 
@@ -24,7 +24,7 @@ npx wrangler deploy
 
 ## Studio artwork
 
-The recorder supports horizontal drag, keyboard arrows, and an exploded view. The page loads a WebP poster on arrival. Additional angles load on interaction. Native CSS scroll timelines tilt the recorder, move the studio illustrations, and draw the reading progress line. Reduced motion keeps the artwork stationary. Project illustrations and recorder geometry are generated offline by `artwork/render_studio.py`.
+The recorder supports horizontal drag, keyboard arrows, and an exploded view. A WebP poster appears first. On supported devices the scene becomes a live 3D model with rotating spindles and an articulated housing. The image turntable remains available if WebGL is unavailable. Reduced motion starts with still artwork and offers explicit control. The posters and recorder geometry come from `artwork/render_studio.py`.
 
 To reproduce the artwork, use Python 3.11 with `bpy==4.5.9` and Pillow. From the repository root, run:
 
@@ -38,7 +38,7 @@ python artwork/render_studio.py recorder site/assets/studio/recorder --turntable
 
 ## Signal Path
 
-The Studio section follows a copper ribbon through a tape reel, a memory stack, and a film gate. Each scene has independently moving layers driven by the native CSS scroll timeline. Reduced-motion and short-screen layouts show the four chapters in reading order. The silent film loads on playback and pauses when it leaves view.
+The Studio section follows a copper ribbon through a tape reel, a memory stack, and a film gate. Native CSS drives the transitions between chapters. In each visible chapter, WebGL draws the mechanism in three dimensions. The image layers provide a fallback. Reduced-motion and short-screen layouts show the four chapters in reading order. The silent film loads on playback and pauses when it leaves view.
 
 `artwork/build_signal_sources.py` creates the three native SolidCraft designs, the EffectCraft signal traces, and a FilmCraft sequence using the portfolio’s existing video stills. With those three MCP helpers configured in Codex, regenerate the production inputs and render the responsive layers using:
 
@@ -57,4 +57,21 @@ To rebuild the installation, place the original shot at `Gemini Signal Path.mp4`
 python artwork/build_signal_sources.py "/tmp/signal-path-sources" --contact-print
 python artwork/build_signal_sources.py "/tmp/signal-path-sources" --studio-identity
 python artwork/render_signal.py "/tmp/signal-path-sources" site/assets/installation --installation
+```
+
+
+## Live sculpture and lighting
+
+The portfolio sections share an off-white studio surface. Each of the four copper joins returns to the same rail at both ends, including while its mesh flexes. A single WebGL2 renderer draws the visible models into their clipped page canvases. The site fetches models on approach, pauses off-screen scenes, and respects the 3D motion switch, reduced motion, and data-saving preferences.
+
+`artwork/web/spatial-motion.js` articulates the mechanisms. The reel spins around its axle, the memory rack opens along guide rods, and the film advances in its carriage. Focusing an external link moves the cable to that outlet. The filmstrip uses the eight EffectCraft exposures on one curved surface. The surface finish, photographed studio reflections and soft cast shadows use physically based materials. The lighting source is documented in [STUDIO-LIGHT-LICENSE.md](artwork/STUDIO-LIGHT-LICENSE.md).
+
+The deployable models and browser bundle are included in `site/assets/`. To rebuild them, use the same Blender Python environment as the poster render, the original Craft workspace, and Node:
+
+```sh
+npm ci
+python artwork/export_studio_models.py site/assets/models
+python artwork/export_splice_models.py site/assets/models
+python artwork/render_signal.py "/path/to/Signal Path" site/assets/models --models
+npm run build:spatial
 ```

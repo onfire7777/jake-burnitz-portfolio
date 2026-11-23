@@ -8,18 +8,22 @@ trace PNGs, and FilmCraft exposure-0/1/2 PNGs. Requires bpy 4.5 and Pillow.
 import argparse
 import math
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
-from mathutils import Vector
+from mathutils import Matrix, Vector
 from PIL import Image, ImageDraw, ImageOps
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source", type=Path)
 parser.add_argument("output", type=Path)
 parser.add_argument("--draft", action="store_true")
+parser.add_argument(
+    "--models", action="store_true", help="Export articulated browser models"
+)
 parser.add_argument(
     "--print-only",
     action="store_true",
@@ -53,7 +57,7 @@ def finish(obj, name, mat, parent=None, bevel=0):
         obj.parent = parent
     if bevel:
         mod = obj.modifiers.new("Machined edge", "BEVEL")
-        mod.width, mod.segments = bevel, 3
+        mod.width, mod.segments = bevel, 1 if options.models else 3
         obj.modifiers.new("Weighted normals", "WEIGHTED_NORMAL")
     return obj
 
@@ -71,12 +75,17 @@ def component(kind, parent, mat, z, scale=0.038):
     obj.scale = (scale,) * 3
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.location = (0, 0, z)
-    return finish(obj, kind, mat, parent, 0.018)
+    return finish(
+        obj, kind, mat, parent, 0 if options.models and kind == "spool" else 0.018
+    )
 
 
 def cylinder(name, xyz, radius, height, mat, parent=None):
     bpy.ops.mesh.primitive_cylinder_add(
-        vertices=100, radius=radius, depth=height, location=xyz
+        vertices=32 if options.models else 100,
+        radius=radius,
+        depth=height,
+        location=xyz,
     )
     obj = bpy.context.object
     for face in obj.data.polygons:
@@ -86,8 +95,8 @@ def cylinder(name, xyz, radius, height, mat, parent=None):
 
 def ring(parent, r, z, mat, gauge=0.014):
     bpy.ops.mesh.primitive_torus_add(
-        major_segments=100,
-        minor_segments=8,
+        major_segments=42 if options.models else 100,
+        minor_segments=6 if options.models else 8,
         major_radius=r,
         minor_radius=gauge,
         location=(0, 0, z),
@@ -171,6 +180,68 @@ def light(xyz, color, power, size, target=(0, 0, 1)):
     )
 
 
+def export_model(name, groups):
+    """Bake modifiers into meshes, preserving each assembly's hinge or axle."""
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    built = []
+    for label, origin, pieces in groups:
+        if not pieces:
+            continue
+        joined = []
+        local = origin.inverted()
+        for piece in pieces:
+            evaluated = piece.evaluated_get(deps)
+            mesh = bpy.data.meshes.new_from_object(evaluated, depsgraph=deps)
+            mesh.transform(local @ evaluated.matrix_world)
+            obj = bpy.data.objects.new("Baked part", mesh)
+            bpy.context.collection.objects.link(obj)
+            joined.append(obj)
+        bpy.ops.object.select_all(action="DESELECT")
+        for obj in joined:
+            obj.select_set(True)
+        obj = joined[0]
+        bpy.context.view_layer.objects.active = obj
+        if len(joined) > 1:
+            bpy.ops.object.join()
+        obj.name = label
+        obj.matrix_world = origin.copy()
+        built.append(obj)
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in built:
+        obj.select_set(True)
+    bpy.ops.export_scene.gltf(
+        filepath=str(options.output / (name + ".glb")),
+        export_format="GLB",
+        use_selection=True,
+        export_animations=False,
+        export_cameras=False,
+        export_lights=False,
+        export_yup=True,
+    )
+    packer = Path(__file__).resolve().parents[1] / "node_modules" / ".bin" / "gltfpack"
+    model = options.output / (name + ".glb")
+    packed = options.output / (name + ".packed.glb")
+    subprocess.run(
+        [
+            str(packer),
+            "-i",
+            str(model),
+            "-o",
+            str(packed),
+            "-kn",
+            "-km",
+            "-si",
+            "0.55" if name != "contact" else "1",
+            "-se",
+            "0.002",
+        ],
+        check=True,
+    )
+    packed.replace(model)
+    print("Exported", name, [ob.name for ob in built])
+
+
 def generate(kind, tmp):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     s = bpy.context.scene
@@ -200,7 +271,7 @@ def generate(kind, tmp):
         axis = pivot("Tape transport", (-0.68, 0.2, 1.75), (56, -16, -16))
         component("spool", axis, steel, -0.18)
         cylinder("Winding", (0, 0, 0.035), 1.68, 0.33, ferrite, axis)
-        for i in range(25):
+        for i in range(0, 25, 4 if options.models else 1):
             ring(axis, 0.35 + i * 0.054, 0.205, bronze if i % 7 == 0 else steel, 0.006)
         path_ribbon(
             [
@@ -236,7 +307,7 @@ def generate(kind, tmp):
             z = i * 0.265
             mat = [steel, green, pale, green, steel, copper, green, pale][i]
             layer = component("memory", axis, mat, z, 0.040)
-            layer.rotation_euler.z = radians(i * 3 - 8)
+            layer.rotation_euler.z = 0 if options.models else radians(i * 3 - 8)
             if i >= 6:
                 separate.append(layer)
             if i < 7:
@@ -272,7 +343,9 @@ def generate(kind, tmp):
             texture_path = options.source / f"exposure-{j + 1}.png"
             im = Image.open(texture_path).convert("RGB")
             im = ImageOps.colorize(ImageOps.grayscale(im), "#231d1b", "#ffe6c5")
-            tex_path = tmp / f"print-{j}.png"
+            tex_path = tmp / (f"print-{j}.jpg" if options.models else f"print-{j}.png")
+            if options.models:
+                im.thumbnail((384, 216))
             im.save(tex_path)
             mat = material("Photographic emulsion", "ffffff", 0.05, 0.29)
             texture = mat.node_tree.nodes.new("ShaderNodeTexImage")
@@ -341,6 +414,121 @@ def generate(kind, tmp):
             copper,
             bronze,
         )
+    if options.models:
+        # Ground the working assemblies on the same low tabletop fixtures.
+        # The arms are behind the moving parts and the memory guides go
+        # through the existing holes in the native SolidCraft plates.
+        if kind in {"voice", "frame"}:
+            x = -0.68 if kind == "voice" else 0
+            block("Cast base", (x, 0.83, 0.14), (2.30, 1.52, 0.23), steel, bevel=0.08)
+            block(
+                "Fixture facing", (x, 0.8, 0.27), (2.15, 1.39, 0.07), pale, bevel=0.037
+            )
+            block(
+                "Bearing support",
+                (x, 0.90, 0.92),
+                (0.43, 0.52, 1.36),
+                silver,
+                bevel=0.085,
+            )
+            block(
+                "Bearing seat", (x, 0.85, 1.52), (0.63, 0.72, 0.40), steel, bevel=0.075
+            )
+            cylinder("Rear axle", (0, 0, -0.32), 0.28, 0.43, bronze, axis)
+            for bx in (-0.81, 0.81):
+                cylinder("Fixture bolt", (x + bx, 0.46, 0.327), 0.077, 0.053, steel)
+                block(
+                    "Bolt slot",
+                    (x + bx, 0.46, 0.355),
+                    (0.074, 0.013, 0.009),
+                    pale,
+                    bevel=0.002,
+                )
+            if kind == "voice":
+                # A rolled machined edge catches reflections evenly around each
+                # opening; the original SolidCraft face stays perfectly planar.
+                for index in range(5):
+                    angle = math.tau * index / 5
+                    collar = ring(axis, 13.9 * 0.038, 0.341, silver, 0.015)
+                    collar.location.x = 27.5 * 0.038 * math.cos(angle)
+                    collar.location.y = 27.5 * 0.038 * math.sin(angle)
+                cylinder("Axle lock", (0, 0, 0.525), 0.085, 0.027, bronze, axis)
+                block(
+                    "Axle key",
+                    (0, 0, 0.541),
+                    (0.095, 0.019, 0.008),
+                    steel,
+                    axis,
+                    bevel=0.003,
+                )
+            else:
+                for side in (-1, 1):
+                    cylinder(
+                        "Film guide",
+                        (side * 1.86, 0.82, 0.19),
+                        0.093,
+                        0.18,
+                        bronze,
+                        axis,
+                    )
+                    cylinder(
+                        "Guide cap",
+                        (side * 1.86, 0.82, 0.292),
+                        0.06,
+                        0.025,
+                        steel,
+                        axis,
+                    )
+        else:
+            block("Foot", (0, 0.14, 0.12), (3.18, 2.52, 0.19), steel, bevel=0.065)
+            for x in (-1.36, 1.36):
+                for y in (-0.92, 0.92):
+                    cylinder("Guide rod", (x, y, 1.20), 0.050, 3.36, pale, axis)
+                    cylinder("Guide head", (x, y, 2.89), 0.072, 0.050, steel, axis)
+        bpy.context.view_layer.update()
+        items = [
+            ob
+            for ob in s.objects
+            if ob.type in {"MESH", "CURVE", "FONT"} and ob.name != "Cyclorama"
+        ]
+        basis = axis.matrix_world.copy()
+        if kind == "voice":
+            groups = [
+                (
+                    "Reel",
+                    basis,
+                    [
+                        ob
+                        for ob in items
+                        if ob.parent == axis and not ob.name.startswith("Rear axle")
+                    ],
+                )
+            ]
+            name = "spool"
+        elif kind == "memory":
+            groups = []
+            for i in range(8):
+                z = i * 0.265
+                pieces = [
+                    ob
+                    for ob in items
+                    if ob.parent == axis
+                    and not ob.name.startswith("Guide")
+                    and z - 0.001 <= ob.location.z < z + 0.264
+                ]
+                groups.append(
+                    (f"Layer{i}", basis @ Matrix.Translation((0, 0, z)), pieces)
+                )
+            name = "plates"
+        else:
+            groups = [("FilmAdvance", basis, strip)]
+            name = "gate"
+        moved = {ob for _, _, pieces in groups for ob in pieces}
+        groups.append(
+            ("Bed", Matrix.Identity(4), [ob for ob in items if ob not in moved])
+        )
+        export_model(name, groups)
+        return
     light((-4, -4, 8), (1, 0.86, 0.73), 1000, 5)
     light((4, -0.2, 6), (0.75, 0.87, 1), 900, 4)
     light((0, 5, 6), (1, 0.83, 0.65), 1000, 3)
@@ -581,6 +769,72 @@ def render_installation(kind, tmp):
         cord = bpy.data.objects.new("Patch cable", curve)
         bpy.context.collection.objects.link(cord)
         separate.append(finish(cord, "Patch cable", copper, plug))
+    if options.models:
+        bpy.context.view_layer.update()
+        items = [ob for ob in scene.objects if ob.type in {"MESH", "CURVE", "FONT"}]
+        if kind == "patchbay":
+            sockets = [ob for ob in scene.objects if ob.name.startswith("Socket axis")]
+            groups = [("Lead", plug.matrix_world.copy(), separate)]
+            for i, socket in enumerate(sockets):
+                groups.append(
+                    (f"Port{i}", socket.matrix_world.copy(), list(socket.children))
+                )
+            grouped = {ob for _, _, pieces in groups for ob in pieces}
+            groups.append(
+                ("Panel", Matrix.Identity(4), [ob for ob in items if ob not in grouped])
+            )
+            export_model("patch", groups)
+        elif kind == "contact":
+            # Conform the moving emulsion to the same bent strip as its backing.
+            atlas = Image.new("RGB", (8 * 256, 104))
+            for i in range(8):
+                exposure = Image.open(
+                    options.source / "Contact printer" / f"print-{i}.png"
+                )
+                atlas.paste(
+                    ImageOps.fit(exposure.convert("RGB"), (256, 104)), (i * 256, 0)
+                )
+            atlas_path = tmp / "Contact emulsion.jpg"
+            atlas.save(atlas_path, quality=85)
+            inlay = material("Moving emulsion", "ffffff", 0.02, 0.45)
+            image = inlay.node_tree.nodes.new("ShaderNodeTexImage")
+            image.image = bpy.data.images.load(str(atlas_path))
+            inlay.node_tree.links.new(
+                image.outputs["Color"],
+                inlay.node_tree.nodes["Principled BSDF"].inputs["Base Color"],
+            )
+            overlay = mesh.copy()
+            overlay.name = "Exposure mesh"
+            overlay.materials.clear()
+            overlay.materials.append(inlay)
+            # Sample the original surface's printed central photo, with a very
+            # small lift to avoid z fighting at shallow camera angles.
+            for k in range(steps + 1):
+                u = k / steps
+                t = (504 + 450 * u) / width
+                center = Vector(
+                    (
+                        (t - 0.5) * 14.4,
+                        0.38 * math.sin(t * math.tau - 0.6),
+                        0.44 + 0.41 * math.cos(t * math.tau * 1.4) + 0.008,
+                    )
+                )
+                twist = 0.23 + 0.43 * math.sin(t * math.tau * 1.55)
+                across = (
+                    Vector((0, math.cos(twist), math.sin(twist))) * 1.13 * (182 / 242)
+                )
+                overlay.vertices[2 * k].co = center - across
+                overlay.vertices[2 * k + 1].co = center + across
+            cover = bpy.data.objects.new("Emulsion overlay", overlay)
+            bpy.context.collection.objects.link(cover)
+            export_model(
+                "contact",
+                [
+                    ("Negative", Matrix.Identity(4), [model]),
+                    ("Emulsion", Matrix.Identity(4), [cover]),
+                ],
+            )
+        return
     scene.render.film_transparent = True
     scene.render.resolution_x, scene.render.resolution_y = dimensions
     scene.render.resolution_percentage = 65 if options.draft else 100
@@ -625,7 +879,12 @@ def render_installation(kind, tmp):
 
 
 with tempfile.TemporaryDirectory() as folder:
-    if options.print_only:
+    if options.models:
+        for kind in ("voice", "memory", "frame"):
+            generate(kind, Path(folder))
+        for kind in ("patchbay", "contact"):
+            render_installation(kind, Path(folder))
+    elif options.print_only:
         render_installation("contact", Path(folder))
     elif options.installation:
         graphics = options.source / "Studio graphics"

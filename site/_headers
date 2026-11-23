@@ -2,7 +2,10 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
-  Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://www.youtube-nocookie.com https://open.spotify.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; img-src 'self' blob:; connect-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://www.youtube-nocookie.com https://open.spotify.com; upgrade-insecure-requests
 
 /assets/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/assets/engine/*
+  Cache-Control: public, max-age=0, must-revalidate
