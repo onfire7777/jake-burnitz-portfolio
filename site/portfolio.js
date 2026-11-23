@@ -2,19 +2,31 @@ function setupSectionLinks() {
   if (!("IntersectionObserver" in window)) return;
 
   const links = [...document.querySelectorAll("nav a")];
+  const sections = links.map((link) => document.getElementById(link.hash.slice(1)));
+  const visible = new Set();
+  let footerVisible = false;
+  let active;
+  function markCurrent() {
+    const section = footerVisible ? sections.at(-1) : sections.findLast(item => visible.has(item));
+    if (active === section) return;
+    active = section;
+    links.forEach((link, index) => {
+      if (sections[index] === active) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+  }
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
-      const link = links.find((item) => item.hash === "#" + entry.target.id);
-      if (!link) continue;
-      if (entry.isIntersecting) link.setAttribute("aria-current", "location");
-      else link.removeAttribute("aria-current");
+      if (entry.isIntersecting) visible.add(entry.target);
+      else visible.delete(entry.target);
     }
-  }, { rootMargin: "-22% 0px -52% 0px" });
-
-  for (const link of links) {
-    const section = document.getElementById(link.hash.slice(1));
-    if (section) observer.observe(section);
-  }
+    markCurrent();
+  }, { rootMargin: "-39% 0px -59% 0px" });
+  sections.forEach(section => observer.observe(section));
+  new IntersectionObserver(([entry]) => {
+    footerVisible = entry.isIntersecting;
+    markCurrent();
+  }).observe(document.querySelector(".site-footer"));
 }
 
 function createPlayer({ title, url, allow }) {
@@ -182,5 +194,137 @@ function setupMedia() {
   });
 }
 
+function setupRecorder() {
+  const stage = document.getElementById("recorder-stage");
+  const hint = document.querySelector(".model-hint");
+  const controls = document.querySelector(".turn-controls");
+  const angle = controls.querySelector(".angle");
+  const assembly = controls.querySelector(".assembly-toggle");
+  const frames = new Map();
+  const viewCount = 36;
+  let visibleView = 0;
+  let requestedView = 0;
+  let visibleExploded = false;
+  let exploded = false;
+  let visibleImage;
+  let loading = false;
+  let drag;
+
+  function wrap(view) {
+    return (view % viewCount + viewCount) % viewCount;
+  }
+
+  function loadView(view, separate) {
+    const key = (separate ? "open-" : "view-") + String(view).padStart(2, "0");
+    if (frames.has(key)) return frames.get(key);
+    const image = new Image(660, 495);
+    image.className = "turn-frame";
+    image.alt = "";
+    image.draggable = false;
+    image.src = "assets/studio/recorder/" + key + ".webp";
+    const decoded = image.decode().then(() => image).catch((error) => {
+      frames.delete(key);
+      throw error;
+    });
+    frames.set(key, decoded);
+    if (frames.size > 8) frames.delete(frames.keys().next().value);
+    return decoded;
+  }
+
+  function display(view, separate, image) {
+    const assemblyChanged = separate !== visibleExploded;
+    if (visibleImage !== image) {
+      visibleImage?.remove();
+      if (image) stage.insertBefore(image, stage.lastElementChild);
+      visibleImage = image;
+    }
+    if (assemblyChanged && image && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      image.animate([{ opacity: .35 }, { opacity: 1 }], { duration: 180, easing: "ease-out" });
+    }
+    visibleView = view;
+    visibleExploded = separate;
+    assembly.setAttribute("aria-pressed", String(separate));
+    angle.textContent = String(view * 10).padStart(3, "0") + "°";
+    stage.setAttribute("aria-valuenow", String(view * 10));
+    stage.setAttribute("aria-valuetext", view * 10 + " degrees");
+  }
+
+  async function draw() {
+    if (loading) return;
+    loading = true;
+    try {
+      while (visibleView !== requestedView || exploded !== visibleExploded) {
+        const view = requestedView;
+        const separate = exploded;
+        const image = !separate && view === 0 ? undefined : await loadView(view, separate);
+        if (view === requestedView && separate === exploded) display(view, separate, image);
+      }
+      // Warm just the adjacent angles after an interaction.
+      for (const next of [wrap(visibleView - 1), wrap(visibleView + 1)]) {
+        if (next || exploded) loadView(next, exploded).catch(() => {});
+      }
+    } catch {
+      requestedView = visibleView;
+      exploded = visibleExploded;
+      hint.textContent = "Couldn’t load view. Try again.";
+    } finally {
+      loading = false;
+    }
+  }
+
+  function turn(view) {
+    requestedView = wrap(view);
+    hint.textContent = "Drag to rotate";
+    if (requestedView === 0 && !exploded) display(0, false);
+    void draw();
+  }
+
+  stage.classList.add("is-interactive");
+  stage.tabIndex = 0;
+  stage.setAttribute("role", "slider");
+  stage.setAttribute("aria-label", "Field recorder rotation");
+  stage.setAttribute("aria-describedby", "model-hint");
+  stage.setAttribute("aria-valuemin", "0");
+  stage.setAttribute("aria-valuemax", "350");
+  stage.setAttribute("aria-valuenow", "0");
+  stage.setAttribute("aria-valuetext", "0 degrees");
+  controls.hidden = false;
+  hint.hidden = false;
+
+  assembly.addEventListener("click", () => {
+    exploded = !exploded;
+    turn(requestedView);
+  });
+  controls.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-turn]");
+    if (button) turn(requestedView + 3 * Number(button.dataset.turn));
+  });
+  stage.addEventListener("keydown", (event) => {
+    const keys = { ArrowLeft: requestedView - 1, ArrowDown: requestedView - 1,
+      ArrowRight: requestedView + 1, ArrowUp: requestedView + 1, Home: 0, End: viewCount - 1 };
+    if (!Object.hasOwn(keys, event.key)) return;
+    event.preventDefault();
+    turn(keys[event.key]);
+  });
+  stage.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    drag = { id: event.pointerId, x: event.clientX, y: event.clientY, view: requestedView };
+    stage.setPointerCapture(event.pointerId);
+  });
+  stage.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== drag?.id) return;
+    const dx = event.clientX - drag.x;
+    if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(event.clientY - drag.y)) return;
+    stage.classList.add("is-dragging");
+    const next = wrap(drag.view + Math.round(dx / 12));
+    if (next !== requestedView) turn(next);
+  });
+  stage.addEventListener("lostpointercapture", () => {
+    drag = undefined;
+    stage.classList.remove("is-dragging");
+  });
+}
+
 setupMedia();
 setupSectionLinks();
+setupRecorder();
