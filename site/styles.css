@@ -74,7 +74,8 @@ h1 em span { color: var(--rust); }
 .primary:hover span { transform: translateY(2px); }
 
 .studio-viewer { grid-area: model; overflow: hidden; border: 1px solid #b8b8ad; border-radius: 12px; background: #eceae2; }
-.model-stage { position: relative; isolation: isolate; aspect-ratio: 4/3; background: #c7c6c0; }
+.model-stage { overflow: hidden; position: relative; isolation: isolate; aspect-ratio: 4/3; background: #c7c6c0; }
+.model-art { position: absolute; inset: 0; }
 .model-stage picture, .model-stage img { display: block; width: 100%; height: 100%; }
 .model-stage img { object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .model-stage.is-interactive { cursor: grab; touch-action: pan-y pinch-zoom; }
@@ -103,7 +104,7 @@ h2 { font-size: clamp(3rem,5.4vw,5.3rem); font-weight: 600; letter-spacing: -.07
 h2 em { margin-inline-start: .035em; letter-spacing: -.055em; font-size: 1.055em; }
 .section-heading > .text-link { flex-shrink: 0; }
 .project-grid { display: grid; grid-template-columns: 1.03fr 1fr; gap: 1rem; }
-.project { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; grid-template-columns: minmax(0,.74fr) minmax(0,1fr); }
+.project { min-width: 0; overflow: clip; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; grid-template-columns: minmax(0,.74fr) minmax(0,1fr); }
 .project-voice { grid-column: 1; grid-row: 1 / 3; grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
 .project-art { contain: paint; min-width: 0; position: relative; min-height: 100%; overflow: hidden; }
 .project-art img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
@@ -228,6 +229,70 @@ body:has(dialog[open]) { overflow: hidden; }
   .turn-controls button, .icon-button, .dock-heading .icon-button { min-width: 44px; min-height: 44px; }
   .model-caption { row-gap: .15rem; }
   html { scroll-padding-top: 7rem; }
+}
+/* Let the browser scrub the artwork on its scroll timeline. The controls, copy,
+   and hit targets sit outside the moving layers. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) and (animation-range: entry 0% exit 100%) {
+    .site-header::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 -1px;
+      height: 3px;
+      background: var(--orange);
+      pointer-events: none;
+      transform-origin: left;
+      animation: advance-line auto linear both;
+      animation-timeline: scroll(root block);
+    }
+    .model-art {
+      transform-origin: 52% 58%;
+      animation: recorder-lift auto linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0px 72vh;
+    }
+    .project-art { view-timeline: --sculpture block; }
+    .project-art img {
+      animation: sculpture-pass auto linear both;
+      animation-timeline: --sculpture;
+      animation-range: entry 0% exit 100%;
+    }
+    .lead-film { view-timeline: --screening block; }
+    .lead-film img {
+      animation: film-settle auto linear both;
+      animation-timeline: --screening;
+      animation-range: entry 0% contain 50%;
+    }
+    .link-section { view-timeline: --directory block; }
+    .links-heading::after {
+      content: "";
+      display: block;
+      width: 6.5rem;
+      height: 3px;
+      margin-top: 1rem;
+      background: var(--orange);
+      transform-origin: left;
+      animation: advance-line auto linear both;
+      animation-timeline: --directory;
+      animation-range: entry 0% contain 30%;
+    }
+  }
+}
+@keyframes advance-line {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes recorder-lift {
+  from { transform: perspective(950px) scale(1); }
+  to { transform: perspective(950px) translateY(2%) rotateX(5deg) rotateZ(-5deg) scale(1.18); }
+}
+@keyframes sculpture-pass {
+  from { transform: translateY(4%) scale(1.11); }
+  to { transform: translateY(-4%) scale(1.11); }
+}
+@keyframes film-settle {
+  from { transform: scale(1.09); }
+  to { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

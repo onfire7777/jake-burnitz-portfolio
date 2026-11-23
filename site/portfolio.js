@@ -196,6 +196,7 @@ function setupMedia() {
 
 function setupRecorder() {
   const stage = document.getElementById("recorder-stage");
+  const art = stage.querySelector(".model-art");
   const hint = document.querySelector(".model-hint");
   const controls = document.querySelector(".turn-controls");
   const angle = controls.querySelector(".angle");
@@ -235,7 +236,7 @@ function setupRecorder() {
     const assemblyChanged = separate !== visibleExploded;
     if (visibleImage !== image) {
       visibleImage?.remove();
-      if (image) stage.insertBefore(image, stage.lastElementChild);
+      if (image) art.append(image);
       visibleImage = image;
     }
     if (assemblyChanged && image && !matchMedia("(prefers-reduced-motion: reduce)").matches) {

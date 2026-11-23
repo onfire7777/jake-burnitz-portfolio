@@ -24,7 +24,7 @@ npx wrangler deploy
 
 ## Studio artwork
 
-The recorder supports horizontal drag, keyboard arrows, and an exploded view. The page loads a WebP poster on arrival. Additional angles load on interaction. Project illustrations and recorder geometry are generated offline by `artwork/render_studio.py`.
+The recorder supports horizontal drag, keyboard arrows, and an exploded view. The page loads a WebP poster on arrival. Additional angles load on interaction. Native CSS scroll timelines tilt the recorder, move the studio illustrations, and draw the reading progress line. Reduced motion keeps the artwork stationary. Project illustrations and recorder geometry are generated offline by `artwork/render_studio.py`.
 
 To reproduce the artwork, use Python 3.11 with `bpy==4.5.9` and Pillow. From the repository root, run:
 
