@@ -24,7 +24,7 @@ npx wrangler deploy
 
 ## Studio artwork
 
-The recorder supports horizontal drag, keyboard arrows, and an exploded view. A WebP poster appears first. On supported devices the scene becomes a live 3D model with rotating spindles and an articulated housing. The image turntable remains available if WebGL is unavailable. Reduced motion starts with still artwork and offers explicit control. The posters and recorder geometry come from `artwork/render_studio.py`.
+The recorder supports horizontal drag, keyboard arrows, and an exploded view. A transparent still from the browser renderer appears first. On supported devices the scene becomes a live 3D model with rotating spindles and an articulated housing. The image turntable remains available if WebGL is unavailable. Reduced motion starts with still artwork and offers explicit control. The original turntable and recorder geometry come from `artwork/render_studio.py`.
 
 To reproduce the artwork, use Python 3.11 with `bpy==4.5.9` and Pillow. From the repository root, run:
 
@@ -75,3 +75,5 @@ python artwork/export_splice_models.py site/assets/models
 python artwork/render_signal.py "/path/to/Signal Path" site/assets/models --models
 npm run build:spatial
 ```
+
+After changing the models or lighting, serve the site locally and run `artwork/web/capture-posters.mjs` with Node. The script accepts the preview URL and documents how to select an installed Chromium browser and Playwright module. It regenerates the transparent first frames in `site/assets/posters/` from the same cameras, lighting and materials that visitors see.

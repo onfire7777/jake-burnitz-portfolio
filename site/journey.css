@@ -27,7 +27,8 @@ main#main > section::before {
 .hero-label { margin-bottom: clamp(1.2rem,2.3vw,2rem); }
 .studio-viewer { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
 .model-stage { background: transparent; }
-.model-stage .model-art { mask-image: radial-gradient(ellipse 77% 73% at center, black 49%, transparent 87%); }
+.model-stage .model-art { animation: none; }
+.model-art .turn-frame { mask-image: radial-gradient(ellipse 77% 73% at center, black 49%, transparent 87%); }
 .view-corner { display: none; }
 .model-caption { background: transparent; border: 0; border-top: 1px solid var(--line); padding: .45rem 0; }
 .model-caption strong, .project .eyebrow, .hero-label, .signal-intro .eyebrow { letter-spacing: .065em; }
@@ -51,7 +52,6 @@ main#main > section::before {
 .project-grid { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; gap: clamp(.8rem,2.8vw,2.8rem); }
 .project, .project-voice, .project + .project { border: 0; background: transparent; }
 .project .project-art { border: 0; }
-.project-art > img { mask-image: radial-gradient(ellipse 84% 87%,black 48%,transparent 90%); }
 .project-body { padding: 1.15rem 0 0; border-top: 1px solid var(--line); }
 .project-art .project-meter { z-index: 2; bottom: 8px; right: 0; width: 23%; box-shadow: none; }
 .project-links { gap: .45rem 1.3rem; }
@@ -71,6 +71,14 @@ main#main > section::before {
 /* Each view clips its own live canvas. The native HTML controls and captions
    remain outside the drawing surface and keep their original hit areas. */
 [data-model] { isolation: isolate; }
+/* The orthographic cameras frame by width. The first image uses that same
+   scale and center at every aspect ratio, including narrow mobile cards. */
+[data-model] img.studio-still {
+  position: absolute; inset: 50% 0 auto; width: 100%; height: auto;
+  transform: translateY(-50%); animation: none; pointer-events: none;
+}
+.signal-shot > .studio-still { mask-image: linear-gradient(90deg, transparent, black 2.5%, black 97.5%, transparent); }
+.contact-art:has(> .studio-still) { animation: none; }
 .model-canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
 .has-live-model .model-art, .has-live-model > .signal-layer, .has-live-model > img,
 .has-live-model > .contact-window, .has-live-model > .patch-lights { visibility: hidden; }

@@ -63,7 +63,11 @@ function makeEngine(photograph, onLost, onRestored) {
 
 export function startSpatialRenderer() {
   const mounts = [...document.querySelectorAll("[data-model]")];
-  if (!mounts.length || !("IntersectionObserver" in window) || !("ResizeObserver" in window)) return;
+  if (!mounts.length) return;
+  if (!("IntersectionObserver" in window) || !("ResizeObserver" in window)) {
+    document.dispatchEvent(new Event("studio-image-fallback"));
+    return;
+  }
   const toggle = document.querySelector("[data-motion-toggle]");
   const label = toggle?.querySelector("[data-motion-label]");
   const recorder = document.querySelector("#recorder-stage");
@@ -126,6 +130,7 @@ export function startSpatialRenderer() {
     }).catch(() => {
       state.failed = true;
       release(state, true);
+      state.mount.dispatchEvent(new Event("studio-image-fallback", { bubbles: true }));
     }).finally(() => { state.loading = false; });
   }
 
@@ -236,6 +241,7 @@ export function startSpatialRenderer() {
       } catch {
         unsupported = true;
         showPreference();
+        document.dispatchEvent(new Event("studio-image-fallback"));
         return;
       }
     }
@@ -268,6 +274,7 @@ export function startSpatialRenderer() {
         if (engine?.lost) return;
         state.failed = true;
         release(state, true);
+        state.mount.dispatchEvent(new Event("studio-image-fallback", { bubbles: true }));
       }
     }
     if (moving() && visible.some(state => !state.failed)) schedule();

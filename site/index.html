@@ -13,6 +13,8 @@
   <meta property="og:image:alt" content="Jake’s silver and orange field recorder sculpture">
   <link rel="canonical" href="https://jakeburnitz.me/">
   <link rel="icon" href="assets/installation/jb-tape.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/instrument-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css" fetchpriority="high">
   <link rel="stylesheet" href="journey.css">
   <link rel="stylesheet" href="controls.css">
@@ -49,8 +51,8 @@
           <div class="model-stage" id="recorder-stage" data-model="recorder">
             <div class="model-art">
               <picture>
-                <source media="(max-width: 640px)" srcset="assets/studio/recorder-small.webp">
-                <img id="recorder-poster" src="assets/studio/recorder.webp" alt="A brushed-aluminum field recorder with two tape reels, an analog meter, and orange side rails." width="1200" height="900" fetchpriority="high" draggable="false">
+                <source media="(max-width: 640px)" srcset="assets/posters/recorder-small.webp">
+                <img id="recorder-poster" class="studio-still" src="assets/posters/recorder.webp" alt="A brushed-aluminum field recorder with two tape reels, an analog meter, and orange side rails." width="1200" height="900" fetchpriority="high" draggable="false">
               </picture>
             </div>
             <div class="view-corner" aria-hidden="true"></div>
@@ -92,38 +94,47 @@
           <div class="signal-view">
             <div class="signal-filmstrip">
             <div class="signal-shot voice" data-model="spool">
-              <picture class="signal-layer signal-bench">
-                <source media="(max-width: 700px)" srcset="assets/signal/voice-bench-small.webp">
-                <img src="assets/signal/voice-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
-              <picture class="signal-layer signal-part">
-                <source media="(max-width: 700px)" srcset="assets/signal/voice-part-small.webp">
-                <img src="assets/signal/voice-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
+              <img class="studio-still" src="assets/posters/spool.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              <template data-fallback-art>
+                <picture class="signal-layer signal-bench">
+                  <source media="(max-width: 700px)" srcset="assets/signal/voice-bench-small.webp">
+                  <img src="assets/signal/voice-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+                <picture class="signal-layer signal-part">
+                  <source media="(max-width: 700px)" srcset="assets/signal/voice-part-small.webp">
+                  <img src="assets/signal/voice-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+              </template>
             </div>
             <div class="signal-shot memory" data-model="plates">
-              <picture class="signal-layer signal-bench">
-                <source media="(max-width: 700px)" srcset="assets/signal/memory-bench-small.webp">
-                <img src="assets/signal/memory-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
-              <picture class="signal-layer signal-part">
-                <source media="(max-width: 700px)" srcset="assets/signal/memory-part-small.webp">
-                <img src="assets/signal/memory-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
+              <img class="studio-still" src="assets/posters/plates.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              <template data-fallback-art>
+                <picture class="signal-layer signal-bench">
+                  <source media="(max-width: 700px)" srcset="assets/signal/memory-bench-small.webp">
+                  <img src="assets/signal/memory-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+                <picture class="signal-layer signal-part">
+                  <source media="(max-width: 700px)" srcset="assets/signal/memory-part-small.webp">
+                  <img src="assets/signal/memory-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+              </template>
             </div>
             <div class="signal-shot frame" data-model="gate">
-              <picture class="signal-layer signal-bench">
-                <source media="(max-width: 700px)" srcset="assets/signal/frame-bench-small.webp">
-                <img src="assets/signal/frame-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
-              <picture class="signal-layer signal-strip">
-                <source media="(max-width: 700px)" srcset="assets/signal/frame-strip-small.webp">
-                <img src="assets/signal/frame-strip.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
-              <picture class="signal-layer signal-part">
-                <source media="(max-width: 700px)" srcset="assets/signal/frame-part-small.webp">
-                <img src="assets/signal/frame-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
-              </picture>
+              <img class="studio-still" src="assets/posters/gate.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              <template data-fallback-art>
+                <picture class="signal-layer signal-bench">
+                  <source media="(max-width: 700px)" srcset="assets/signal/frame-bench-small.webp">
+                  <img src="assets/signal/frame-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+                <picture class="signal-layer signal-strip">
+                  <source media="(max-width: 700px)" srcset="assets/signal/frame-strip-small.webp">
+                  <img src="assets/signal/frame-strip.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+                <picture class="signal-layer signal-part">
+                  <source media="(max-width: 700px)" srcset="assets/signal/frame-part-small.webp">
+                  <img src="assets/signal/frame-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+                </picture>
+              </template>
             </div>
               <div class="signal-shot screening">
                 <video id="studio-film-player" controls muted playsinline preload="none" width="1280" height="720"
@@ -174,7 +185,7 @@
       </header>
       <div class="project-grid">
         <article class="project project-voice">
-          <div class="project-art" data-model="burnos"><img src="assets/studio/voice.webp" width="1040" height="530" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-voice.webp" width="360" height="82" alt="" loading="lazy"></span></div>
+          <div class="project-art" data-model="burnos"><img class="studio-still" src="assets/posters/burnos.webp" width="800" height="526" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-voice.webp" width="360" height="82" alt="" loading="lazy"></span></div>
           <div class="project-body">
             <p class="eyebrow">Voice interface</p>
             <h3>BurnOS</h3>
@@ -186,7 +197,7 @@
           </div>
         </article>
         <article class="project project-memory">
-          <div class="project-art" data-model="mnemosyne"><img src="assets/studio/memory.webp" width="680" height="680" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-memory.webp" width="360" height="82" alt="" loading="lazy"></span></div>
+          <div class="project-art" data-model="mnemosyne"><img class="studio-still" src="assets/posters/mnemosyne.webp" width="800" height="526" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-memory.webp" width="360" height="82" alt="" loading="lazy"></span></div>
           <div class="project-body">
             <p class="eyebrow">Agent memory</p>
             <h3>Mnemosyne</h3>
@@ -197,7 +208,7 @@
           </div>
         </article>
         <article class="project project-benchmark">
-          <div class="project-art" data-model="mnemetric"><img src="assets/studio/benchmark.webp" width="680" height="680" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-frame.webp" width="360" height="82" alt="" loading="lazy"></span></div>
+          <div class="project-art" data-model="mnemetric"><img class="studio-still" src="assets/posters/mnemetric.webp" width="800" height="526" alt="" loading="lazy" decoding="async"><span class="project-meter" aria-hidden="true"><img src="assets/installation/meter-frame.webp" width="360" height="82" alt="" loading="lazy"></span></div>
           <div class="project-body">
             <p class="eyebrow">Memory evaluation</p>
             <h3>Mnemetric</h3>
@@ -222,11 +233,14 @@
         </header>
       <div class="cinema-mast">
         <div class="contact-art" data-model="contact" aria-hidden="true">
-          <img src="assets/installation/contact.webp" width="1550" height="350" alt="" loading="lazy" decoding="async">
-          <div class="contact-window"><picture>
-            <source media="(prefers-reduced-motion: no-preference)" srcset="assets/installation/contact-exposures.webp">
-            <img src="assets/installation/contact.webp" width="930" height="1680" alt="" loading="lazy" decoding="async">
-          </picture></div>
+          <img class="studio-still" src="assets/posters/contact.webp" width="1280" height="474" alt="" loading="lazy" decoding="async">
+          <template data-fallback-art>
+            <img src="assets/installation/contact.webp" width="1550" height="350" alt="" loading="lazy" decoding="async">
+            <div class="contact-window"><picture>
+              <source media="(prefers-reduced-motion: no-preference)" srcset="assets/installation/contact-exposures.webp">
+              <img src="assets/installation/contact.webp" width="930" height="1680" alt="" loading="lazy" decoding="async">
+            </picture></div>
+          </template>
         </div>
       </div>
         <div class="screening-grid">
@@ -289,9 +303,12 @@
       <div class="shell link-section">
       <div class="links-heading"><h2 id="links-title">Find me <em>online.</em></h2><p class="links-intro">Follow the builds on GitHub or keep watching on YouTube.</p>
         <div class="patch-art" data-model="patch" aria-hidden="true">
-          <img src="assets/installation/patchbay.webp" width="900" height="720" alt="" loading="lazy" decoding="async">
-          <img class="patch-lead" src="assets/installation/patch-lead.webp" width="900" height="720" alt="" loading="lazy" decoding="async">
-          <div class="patch-lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <img class="studio-still" src="assets/posters/patch.webp" width="900" height="719" alt="" loading="lazy" decoding="async">
+          <template data-fallback-art>
+            <img src="assets/installation/patchbay.webp" width="900" height="720" alt="" loading="lazy" decoding="async">
+            <img class="patch-lead" src="assets/installation/patch-lead.webp" width="900" height="720" alt="" loading="lazy" decoding="async">
+            <div class="patch-lights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </template>
         </div>
       </div>
       <div class="link-grid">

@@ -6,6 +6,14 @@ const limited = () => reduced.matches || navigator.connection?.saveData === true
 let loading;
 let intent;
 
+function restoreImageLayers(root) {
+  for (const template of root.querySelectorAll("template[data-fallback-art]")) {
+    template.parentElement.querySelector(".studio-still")?.remove();
+    template.replaceWith(template.content);
+  }
+}
+document.addEventListener("studio-image-fallback", event => restoreImageLayers(event.target));
+
 function activate() {
   if (loading) return loading;
   loading = import("./assets/engine/spatial.js").then(() => {
@@ -19,7 +27,10 @@ function activate() {
         exploded: document.querySelector(".assembly-toggle")?.getAttribute("aria-pressed") === "true",
       },
     }));
-  }).catch(() => { if (toggle) toggle.hidden = true; });
+  }).catch(() => {
+    if (toggle) toggle.hidden = true;
+    restoreImageLayers(document);
+  });
   return loading;
 }
 function optIn() { intent = "opt-in"; activate(); }
@@ -33,6 +44,14 @@ if (toggle && limited()) {
   toggle.addEventListener("click", optIn);
   recorder?.addEventListener("recorder-view", useRecorder);
   reduced.addEventListener("change", onPreference);
+  // The illustrated patch panel can highlight sockets even on a still page.
+  const links = document.querySelector(".link-grid");
+  function useIllustratedPatch() {
+    const patch = document.querySelector(".patch-art");
+    if (limited() && patch && !patch.classList.contains("has-live-model")) restoreImageLayers(patch);
+  }
+  links?.addEventListener("pointerover", useIllustratedPatch, { once: true });
+  links?.addEventListener("focusin", useIllustratedPatch, { once: true });
 } else if ("requestIdleCallback" in window) {
   requestIdleCallback(activate, { timeout: 850 });
 } else {

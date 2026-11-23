@@ -151,7 +151,6 @@ body:has(.soundtrack:not([hidden])) .site-footer { padding-bottom: 9.5rem; }
 .dock-heading .equalizer { color: #ff925e; }
 .dock-heading a { margin-left: auto; font-size: .71rem; text-decoration: underline; text-underline-offset: .16em; }
 .dock-heading .icon-button { width: 32px; height: 32px; color: inherit; border: 0; }
-.dock-heading .icon-button:hover { color: #ff925e; }
 .soundtrack-player { min-height: 80px; border-radius: 10px; overflow: hidden; background: #191b17; }
 .soundtrack-player iframe { height: 80px; }
 .soundtrack.is-playing .equalizer i:nth-child(2n) { animation: meter .7s ease-in-out infinite alternate; }

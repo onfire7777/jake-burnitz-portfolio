@@ -52,7 +52,11 @@ function paperReceiver() {
           float fill = mix(1.0, .55, smoothstep(.012, .12, separation));
           shade += (1.0 - smoothstep(.22, .98, visibility)) * fill;
         }
-        gl_FragColor.a = opacity * (shade / 12.0);
+        // A floor may extend past the light camera. A clamped edge texel
+        // outside that frustum has no physical blocker to project.
+        vec3 border = min(floorCoord, 1.0 - floorCoord);
+        float coverage = smoothstep(width, width + .014, min(border.x, border.y)) * smoothstep(.004, .018, border.z);
+        gl_FragColor.a = coverage * opacity * (shade / 12.0);
       #endif
       #include <tonemapping_fragment>
     `);
