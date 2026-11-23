@@ -23,7 +23,7 @@
     <div class="shell header-inner">
       <a class="brand" href="#top" aria-label="Jake Burnitz home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Jake Burnitz</span></a>
       <nav aria-label="Main navigation">
-        <a href="#work">Work</a><a href="#videos">Videos</a><a href="#links">Links</a>
+        <a href="#studio">Studio</a><a href="#work">Work</a><a href="#videos">Videos</a><a href="#links">Links</a>
       </nav>
       <button class="sound-trigger" type="button" aria-expanded="false" aria-controls="soundtrack" hidden>
         <span class="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Soundtrack
@@ -59,8 +59,93 @@
       <div class="hero-details">
         <p class="intro">I’m Jake Burnitz. I build software you can talk to and tools that help AI remember. On camera, I ask the questions I’m curious about.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#work">Explore my work <span aria-hidden="true">↓</span></a>
+          <a class="button primary" href="#studio">Follow the signal <span aria-hidden="true">↓</span></a>
           <a class="text-link" href="https://github.com/onfire7777">GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section id="studio" class="signal-section" aria-labelledby="signal-title">
+      <div class="signal-track">
+        <span class="signal-stop stop-voice" id="signal-voice" aria-hidden="true"></span>
+        <span class="signal-stop stop-memory" id="signal-memory" aria-hidden="true"></span>
+        <span class="signal-stop stop-frame" id="signal-frame" aria-hidden="true"></span>
+        <span class="signal-stop stop-screen" id="studio-film" aria-hidden="true"></span>
+        <div class="signal-pin shell">
+          <header class="signal-intro">
+            <p class="eyebrow">A studio study by Jake Burnitz</p>
+            <h2 id="signal-title">Signal <em>path.</em></h2>
+          </header>
+          <div class="signal-view">
+            <div class="signal-filmstrip">
+            <div class="signal-shot voice">
+              <picture class="signal-layer signal-bench">
+                <source media="(max-width: 700px)" srcset="assets/signal/voice-bench-small.webp">
+                <img src="assets/signal/voice-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+              <picture class="signal-layer signal-part">
+                <source media="(max-width: 700px)" srcset="assets/signal/voice-part-small.webp">
+                <img src="assets/signal/voice-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <div class="signal-shot memory">
+              <picture class="signal-layer signal-bench">
+                <source media="(max-width: 700px)" srcset="assets/signal/memory-bench-small.webp">
+                <img src="assets/signal/memory-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+              <picture class="signal-layer signal-part">
+                <source media="(max-width: 700px)" srcset="assets/signal/memory-part-small.webp">
+                <img src="assets/signal/memory-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <div class="signal-shot frame">
+              <picture class="signal-layer signal-bench">
+                <source media="(max-width: 700px)" srcset="assets/signal/frame-bench-small.webp">
+                <img src="assets/signal/frame-bench.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+              <picture class="signal-layer signal-strip">
+                <source media="(max-width: 700px)" srcset="assets/signal/frame-strip-small.webp">
+                <img src="assets/signal/frame-strip.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+              <picture class="signal-layer signal-part">
+                <source media="(max-width: 700px)" srcset="assets/signal/frame-part-small.webp">
+                <img src="assets/signal/frame-part.webp" width="1360" height="880" alt="" loading="lazy" decoding="async">
+              </picture>
+            </div>
+              <div class="signal-shot screening">
+                <video id="studio-film-player" controls muted playsinline preload="none" width="1280" height="720"
+                       poster="assets/signal/studio-film-poster.webp" aria-describedby="studio-film-credit" aria-label="Signal Path, a silent macro film of a reel, memory stack, and film gate">
+                  <source src="assets/signal/studio-film.mp4" type="video/mp4">
+                  <track kind="captions" srclang="en" label="Visual descriptions" src="assets/signal/studio-film.vtt">
+                  <a href="assets/signal/studio-film.mp4">Open the studio film</a>
+                </video>
+              </div>
+            </div>
+          </div>
+          <ol class="signal-captions" aria-label="Signal Path chapters">
+          <li class="signal-caption caption-voice">
+            <h3>Capture a voice.</h3>
+            <p>BurnOS begins with a spoken idea. In this study, a five-hole reel carries that idea forward on a copper ribbon.</p>
+            <img class="signal-trace" src="assets/signal/voice-trace.webp" width="720" height="96" alt="" loading="lazy">
+          </li>
+          <li class="signal-caption caption-memory">
+            <h3>Keep the signal.</h3>
+            <p>Mnemosyne gives an AI agent a way to remember. Each slotted plate in this stack holds a different moment.</p>
+            <img class="signal-trace" src="assets/signal/memory-trace.webp" width="720" height="96" alt="" loading="lazy">
+          </li>
+          <li class="signal-caption caption-frame">
+            <h3>Find the frame.</h3>
+            <p>The gate advances through stills from my interviews and the BurnOS demo. A conversation becomes something you can watch again.</p>
+            <img class="signal-trace" src="assets/signal/frame-trace.webp" width="720" height="96" alt="" loading="lazy">
+          </li>
+          <li class="signal-caption caption-screen">
+            <h3>The studio cut.</h3>
+            <p id="studio-film-credit">A silent tracking shot follows the copper ribbon from reel to gate. Generated in Gemini, cut in FilmCraft, and finished in EffectCraft.</p>
+          </li>
+          </ol>
+          <div class="signal-index" role="group" aria-label="Jump to a scene in Signal Path">
+            <a href="#signal-voice">Voice</a><a href="#signal-memory">Memory</a><a href="#signal-frame">Frame</a><a href="#studio-film">Studio film</a>
+          </div>
         </div>
       </div>
     </section>

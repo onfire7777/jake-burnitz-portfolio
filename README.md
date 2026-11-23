@@ -35,3 +35,16 @@ done
 python artwork/render_studio.py recorder site/assets/studio/recorder --turntable
 python artwork/render_studio.py recorder site/assets/studio/recorder --turntable --exploded
 ```
+
+## Signal Path
+
+The Studio section follows a copper ribbon through a tape reel, a memory stack, and a film gate. Each scene has independently moving layers driven by the native CSS scroll timeline. Reduced-motion and short-screen layouts show the four chapters in reading order. The silent film loads on playback and pauses when it leaves view.
+
+`artwork/build_signal_sources.py` creates the three native SolidCraft designs, the EffectCraft signal traces, and a FilmCraft sequence using the portfolio’s existing video stills. With those three MCP helpers configured in Codex, regenerate the production inputs and render the responsive layers using:
+
+```sh
+python3 artwork/build_signal_sources.py "/tmp/signal-path-sources"
+python artwork/render_signal.py "/tmp/signal-path-sources" site/assets/signal
+```
+
+The live studio film is a separate Gemini-generated macro shot. FilmCraft trims the shot and removes its audio. EffectCraft composites the opening title and animates its fade. The published H.264 edit, poster, and timed visual descriptions are in `site/assets/signal/`.

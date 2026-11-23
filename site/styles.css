@@ -297,3 +297,209 @@ body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Signal Path is a vertical sequence by default. The browser's native view
+   timeline turns it into a horizontal camera move when motion is available. */
+.signal-section {
+  --signal-line: #c3bdaf;
+  background: #ede9df;
+  border-block: 1px solid var(--signal-line);
+  padding-block: clamp(2.4rem, 5vw, 5rem);
+}
+.signal-track { position: relative; }
+.signal-pin {
+  display: grid;
+  grid-template-columns: minmax(12rem, .70fr) minmax(0, 1.65fr);
+  grid-template-areas: "intro intro" "voice-copy voice" "memory-copy memory" "frame-copy frame" "screen-copy screen";
+  gap: clamp(1rem, 3.5vw, 3.4rem);
+  align-items: center;
+}
+.signal-intro { grid-area: intro; min-width: 0; }
+.signal-intro .eyebrow { font-size: .69rem; margin: 0 0 1rem; }
+.signal-intro h2 { font-size: clamp(3.4rem, 6.3vw, 6.4rem); }
+.signal-view, .signal-filmstrip, .signal-captions { display: contents; }
+.signal-captions { list-style: none; margin: 0; padding: 0; }
+.signal-shot {
+  position: relative;
+  aspect-ratio: 17/11;
+  overflow: clip;
+  isolation: isolate;
+  background: #d5cec2;
+}
+.signal-shot.voice { grid-area: voice; }
+.signal-shot.memory { grid-area: memory; }
+.signal-shot.frame { grid-area: frame; }
+.signal-shot.screening { grid-area: screen; background: #23231e; display: grid; align-items: center; }
+.signal-shot video { display: block; width: 100%; height: auto; aspect-ratio: 16/9; }
+.signal-layer { position: absolute; inset: 0; display: block; }
+.signal-layer img { width: 100%; height: 100%; }
+.signal-caption { min-width: 0; list-style: none; }
+.caption-voice { grid-area: voice-copy; }
+.caption-memory { grid-area: memory-copy; }
+.caption-frame { grid-area: frame-copy; }
+.caption-screen { grid-area: screen-copy; }
+.signal-caption h3 {
+  font: 400 clamp(2rem, 3.15vw, 3.1rem)/1.02 var(--serif);
+  font-style: italic;
+  letter-spacing: -.04em;
+}
+.signal-caption p { margin-top: .8rem; color: var(--muted); max-width: 29ch; line-height: 1.5; }
+.signal-trace { width: min(100%, 16rem); height: auto; margin-top: 1rem; }
+.signal-index, .signal-stop { display: none; }
+
+@media (max-width: 700px) {
+  .signal-pin {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "voice" "voice-copy" "memory" "memory-copy" "frame" "frame-copy" "screen" "screen-copy";
+    gap: 1rem;
+  }
+  .signal-caption p { max-width: 48ch; }
+  .signal-trace { width: 10rem; }
+  .signal-shot + .signal-shot { margin-top: .5rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 701px) and (min-height: 540px),
+       (prefers-reduced-motion: no-preference) and (max-width: 700px) and (min-height: 640px) {
+  @supports (animation-timeline: view()) and (animation-range: contain 0% contain 100%) {
+    .signal-section {
+      --pin-top: max(82px, calc((100svh - var(--pin-height)) / 2));
+      --pin-height: clamp(22rem, min(43vw, 74svh), 37rem);
+      --travel: clamp(52rem, 165svh, 96rem);
+    }
+    .signal-track {
+      height: calc(var(--pin-height) + var(--travel));
+      view-timeline: --signal-run block;
+      view-timeline-inset: var(--pin-top) calc(100svh - var(--pin-top) - var(--pin-height));
+    }
+    .signal-pin {
+      height: var(--pin-height);
+      position: sticky;
+      top: var(--pin-top);
+      grid-template-columns: minmax(0, .68fr) minmax(0, 1.65fr);
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas: "intro art" "captions art" "index art";
+      column-gap: clamp(1.5rem, 4vw, 4.2rem);
+      row-gap: 1rem;
+      padding-block: 1rem;
+    }
+    .signal-intro { align-self: end; }
+    .signal-view {
+      grid-area: art;
+      display: block;
+      width: 100%;
+      max-width: calc((var(--pin-height) - 2rem) * 17 / 11);
+      justify-self: end;
+      position: relative;
+      overflow: clip;
+      border-radius: 2px;
+      background: #d5cec2;
+    }
+    .signal-filmstrip { display: flex; width: 100%; }
+    .signal-shot { flex: 0 0 100%; min-width: 0; }
+    .signal-captions {
+      grid-area: captions; display: grid;
+      grid-template: "overlap" auto / minmax(0, 1fr);
+      align-items: start;
+      align-self: center;
+    }
+    .signal-caption { grid-area: overlap; }
+    .signal-index { grid-area: index; display: flex; align-self: end; gap: 1rem; border-top: 1px solid var(--signal-line); }
+    .signal-index a { font: .75rem/1 var(--mono); display: inline-flex; min-height: 44px; align-items: center; text-decoration: underline; text-underline-offset: .3em; }
+    .signal-index a { position: relative; text-decoration: none; }
+    .signal-index a::after { content: ""; position: absolute; top: -2px; inset-inline: 0; height: 3px; background: var(--rust); }
+    .signal-index a:nth-child(1)::after { animation-name: first-caption; }
+    .signal-index a:nth-child(2)::after { animation-name: middle-caption; }
+    .signal-index a:nth-child(3)::after { animation-name: frame-caption; }
+    .signal-index a:nth-child(4)::after { animation-name: last-caption; }
+    .signal-index a:hover { color: var(--rust); text-decoration: underline; }
+    .signal-stop { display: block; position: absolute; inset-inline-start: 0; width: 1px; height: 1px; scroll-margin-block-start: calc(var(--pin-top) - 6rem); }
+    .stop-voice { top: 0; }
+    .stop-memory { top: calc(var(--travel) * .345); }
+    .stop-frame { top: calc(var(--travel) * .635); }
+    .stop-screen { top: var(--travel); }
+
+    .signal-filmstrip { animation-name: signal-travel; }
+    .voice .signal-part { animation-name: signal-turn; transform-origin: 40.746% 39.899%; }
+    .memory .signal-part { animation-name: signal-lift; }
+    .frame .signal-strip { animation-name: film-advance; }
+    .caption-voice { animation-name: first-caption; }
+    .caption-memory { animation-name: middle-caption; }
+    .caption-frame { animation-name: frame-caption; }
+    .caption-screen { animation-name: last-caption; }
+    .signal-filmstrip, .voice .signal-part, .memory .signal-part, .frame .signal-strip, .signal-caption, .signal-index a::after {
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --signal-run;
+      animation-range: contain 0% contain 100%;
+    }
+    @media (max-width: 700px) {
+      .signal-section {
+        --pin-top: max(105px, calc((100svh - var(--pin-height)) / 2));
+        --pin-height: min(72svh, 34rem);
+        --travel: 150svh;
+      }
+      body:has(.soundtrack:not([hidden])) .signal-section {
+        --pin-height: min(calc(100svh - 16rem), 34rem);
+        --pin-top: max(105px, calc((100svh - var(--pin-height) - 4.25rem) / 2));
+      }
+      .signal-pin {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        grid-template-areas: "intro" "art" "captions" "index";
+        row-gap: .65rem;
+        padding-block: 0;
+      }
+      .signal-intro { display: flex; gap: 1rem; align-items: baseline; justify-content: space-between; flex-direction: row-reverse; }
+      .signal-intro h2 { font-size: clamp(2.6rem, 9vw, 3.75rem); white-space: nowrap; }
+      .signal-intro .eyebrow { max-width: 19ch; text-align: right; font-size: .59rem; margin: 0; }
+      .signal-view { max-width: min(100%, calc(var(--pin-height) * .9)); justify-self: center; }
+      .signal-shot + .signal-shot { margin: 0; }
+      .signal-caption { display: grid; grid-template-columns: 1fr; }
+      .signal-caption h3 { font-size: 1.9rem; }
+      .signal-caption p { font-size: .92rem; line-height: 1.4; margin-top: .35rem; }
+      .signal-trace { display: none; }
+      .signal-index { gap: 1.4rem; }
+      .signal-stop { scroll-margin-block-start: calc(var(--pin-top) - 7rem); }
+    }
+  }
+}
+
+@keyframes signal-travel {
+  0%, 14% { transform: translateX(0); }
+  29%, 40% { transform: translateX(-100%); }
+  57%, 70% { transform: translateX(-200%); }
+  88%, 100% { transform: translateX(-300%); }
+}
+/* Conjugate the rotation with the two projected CAD axes. The reel stays on
+   its spindle as it turns in the oblique camera view. */
+@keyframes signal-turn {
+  from { transform: matrix(.99866,-.033483,.108136,-1.18421,0,0) rotate(0deg) matrix(1.004417,-.028399,.091718,-.847038,0,0); }
+  30%, to { transform: matrix(.99866,-.033483,.108136,-1.18421,0,0) rotate(132deg) matrix(1.004417,-.028399,.091718,-.847038,0,0); }
+}
+@keyframes signal-lift {
+  0%, 19% { transform: translate(0, 0); }
+  48%, 100% { transform: translate(1.3%, -11%); }
+}
+@keyframes film-advance {
+  0%, 48% { transform: translate(12%, 2%); }
+  77%, 100% { transform: translate(-13%, -2.1%); }
+}
+@keyframes first-caption {
+  0%, 15% { opacity: 1; transform: translateY(0); }
+  23%, 100% { opacity: 0; transform: translateY(-.45rem); }
+}
+@keyframes middle-caption {
+  0%, 21% { opacity: 0; transform: translateY(.45rem); }
+  27%, 42% { opacity: 1; transform: translateY(0); }
+  50%, 100% { opacity: 0; transform: translateY(-.45rem); }
+}
+@keyframes frame-caption {
+  0%, 48% { opacity: 0; transform: translateY(.45rem); }
+  55%, 70% { opacity: 1; transform: translateY(0); }
+  78%, 100% { opacity: 0; transform: translateY(-.45rem); }
+}
+@keyframes last-caption {
+  0%, 76% { opacity: 0; transform: translateY(.45rem); }
+  85%, 100% { opacity: 1; transform: translateY(0); }
+}

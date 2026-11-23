@@ -329,3 +329,59 @@ function setupRecorder() {
 setupMedia();
 setupSectionLinks();
 setupRecorder();
+
+function prepareSignalLayers() {
+  const stage = document.querySelector(".signal-view");
+  if (!stage || !("IntersectionObserver" in window)) return;
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    observer.disconnect();
+    // Later scenes sit outside a clipped filmstrip. Start their requests
+    // together as the visitor approaches so a quick scrub shows every layer.
+    stage.querySelectorAll("img").forEach(image => { image.loading = "eager"; });
+  }, { rootMargin: "160px" });
+  // In the static layout the view uses display:contents and has no box.
+  observer.observe(stage.querySelector(".signal-shot"));
+}
+prepareSignalLayers();
+
+function setupStudioFilm() {
+  const film = document.getElementById("studio-film-player");
+  if (!film || !("IntersectionObserver" in window)) return;
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  let visible = false;
+  let started = false;
+  let resumeOnReturn = false;
+
+  function updatePlayback() {
+    if (!visible || document.hidden) {
+      if (!film.paused) {
+        resumeOnReturn = true;
+        film.pause();
+      }
+      return;
+    }
+    if (motion.matches || navigator.connection?.saveData || film.ended) return;
+    if (started && !resumeOnReturn) return;
+    started = true;
+    resumeOnReturn = false;
+    film.play().catch(() => {}); // Native controls remain available if autoplay is blocked.
+  }
+
+  film.addEventListener("play", () => { started = true; resumeOnReturn = false; });
+  new IntersectionObserver(([entry]) => {
+    visible = entry.intersectionRatio >= 0.55;
+    // Keep the native controls reachable when their scene is on screen.
+    const slides = getComputedStyle(film.closest(".signal-filmstrip")).display === "flex";
+    film.inert = slides && !entry.isIntersecting;
+    updatePlayback();
+  }, { threshold: [0, 0.55] }).observe(film);
+  document.addEventListener("visibilitychange", updatePlayback);
+  motion.addEventListener("change", () => {
+    if (motion.matches) {
+      resumeOnReturn = false;
+      film.pause();
+    }
+  });
+}
+setupStudioFilm();
