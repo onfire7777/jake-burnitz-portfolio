@@ -7,18 +7,29 @@ trace PNGs, and FilmCraft exposure-0/1/2 PNGs. Requires bpy 4.5 and Pillow.
 
 import argparse
 import math
+import shutil
 import tempfile
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
-from PIL import Image, ImageOps
+from mathutils import Vector
+from PIL import Image, ImageDraw, ImageOps
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("source", type=Path)
 parser.add_argument("output", type=Path)
 parser.add_argument("--draft", action="store_true")
+parser.add_argument(
+    "--print-only",
+    action="store_true",
+    help="Rebuild the contact print and the tape edge from EffectCraft exposures",
+)
+parser.add_argument(
+    "--installation",
+    action="store_true",
+    help="Render the page-spanning ribbon, contact print and patch panel",
+)
 options = parser.parse_args()
 options.output.mkdir(parents=True, exist_ok=True)
 radians = math.radians
@@ -390,6 +401,241 @@ def generate(kind, tmp):
     trace.save(options.output / (kind + "-trace.webp"), lossless=True, method=6)
 
 
+def render_installation(kind, tmp):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+    scene.render.engine = "CYCLES"
+    scene.cycles.samples = 26 if not options.draft else 6
+    scene.cycles.use_denoising = True
+    scene.cycles.max_bounces = 5
+    scene.render.threads_mode, scene.render.threads = "FIXED", 6
+    scene.view_settings.view_transform = "AgX"
+    world = bpy.data.worlds.new("Cream studio")
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs[0].default_value = (0.83, 0.85, 0.9, 1)
+    world.node_tree.nodes["Background"].inputs[1].default_value = 0.55
+    scene.world = world
+    light((-4, -4, 7), (1, 0.81, 0.61), 900, 5)
+    light((4, 1, 5), (0.79, 0.89, 1), 820, 4)
+    light((0, 4, 6), (1, 0.93, 0.83), 950, 3)
+    copper = material("Vermilion lacquer", "f05729", 0.44, 0.25)
+    bronze = material("Oxide reverse", "944a26", 0.72, 0.25)
+    steel = material("Machined nickel", "c5c8c0", 0.84, 0.26)
+    dark = material("Bakelite", "39352d", 0.36, 0.34)
+    brass = material("Jack ferrule", "c29248", 0.78, 0.23)
+    separate = []
+    wide = kind != "patchbay"
+    dimensions = (1550, 350) if wide else (900, 720)
+    scale = 13 if wide else 5.9
+    focus = Vector((0, 0, 0.45 if wide else 0.68))
+    bpy.ops.object.camera_add(
+        location=focus + Vector((0, -7, 8) if wide else (3, -7, 8))
+    )
+    camera = bpy.context.object
+    camera.rotation_euler = (
+        (focus - camera.location).to_track_quat("-Z", "Y").to_euler()
+    )
+    camera.data.type, camera.data.ortho_scale = "ORTHO", scale
+    scene.camera = camera
+    if kind == "ribbon":
+        path_ribbon(
+            [
+                (-8, -1, 0.15),
+                (-6, -0.7, 0.25),
+                (-3.8, 0.15, 0.38),
+                (-1.6, 0.42, 0.83),
+                (-0.4, 0.33, 1.36),
+                (0.46, -0.48, 1.3),
+                (0.1, -0.78, 0.55),
+                (-0.68, -0.12, 0.32),
+                (0.26, 0.39, 0.25),
+                (1.7, 0.4, 0.22),
+                (3.8, -0.15, 0.28),
+                (7, -0.5, 0.55),
+            ],
+            0.47,
+            copper,
+            bronze,
+        )
+    elif kind == "contact":
+        # A perforated emulsion strip with the actual FilmCraft exposures.
+        width, height = 1460, 242
+        frame = Image.new("RGBA", (width, height), (48, 37, 30, 255))
+        ink = ImageDraw.Draw(frame)
+        for i in range(3):
+            source = Image.open(options.source / f"exposure-{i}.png").convert("RGB")
+            photo = ImageOps.fit(source, (450, 182))
+            photo = Image.blend(
+                photo, ImageOps.colorize(photo.convert("L"), "#281c16", "#f2e4cd"), 0.55
+            )
+            left = 18 + i * 486
+            frame.paste(photo, (left, 30))
+            for j in range(9):
+                x = left + j * 53
+                for y in [7, 218]:
+                    ink.rounded_rectangle((x, y, x + 21, y + 15), 3, fill=(0, 0, 0, 0))
+        image_path = tmp / "contact.png"
+        frame.save(image_path)
+        mat = material("Exposed negative", "ffffff", 0.06, 0.39)
+        nodes = mat.node_tree.nodes
+        tex = nodes.new("ShaderNodeTexImage")
+        tex.image = bpy.data.images.load(str(image_path))
+        bsdf = nodes.get("Principled BSDF")
+        mat.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        mat.node_tree.links.new(tex.outputs["Alpha"], bsdf.inputs["Alpha"])
+        verts = []
+        faces = []
+        steps = 120
+        for i in range(steps + 1):
+            t = i / steps
+            x = (t - 0.5) * 14.4
+            center = Vector(
+                (
+                    x,
+                    0.38 * math.sin(t * math.tau - 0.6),
+                    0.44 + 0.41 * math.cos(t * math.tau * 1.4),
+                )
+            )
+            twist = 0.23 + 0.43 * math.sin(t * math.tau * 1.55)
+            across = Vector((0, math.cos(twist), math.sin(twist)))
+            verts.extend([center - across * 1.13, center + across * 1.13])
+            if i:
+                faces.append((i * 2 - 2, i * 2, i * 2 + 1, i * 2 - 1))
+        mesh = bpy.data.meshes.new("Waved contact print")
+        mesh.from_pydata(verts, [], faces)
+        mesh.update()
+        model = bpy.data.objects.new("Contact print", mesh)
+        bpy.context.collection.objects.link(model)
+        finish(model, "Contact print", mat)
+        uv = mesh.uv_layers.new()
+        for poly in mesh.polygons:
+            poly.use_smooth = True
+            for loop in poly.loop_indices:
+                vertex = mesh.loops[loop].vertex_index
+                uv.data[loop].uv = ((vertex // 2) / steps, float(vertex % 2))
+    else:
+        panel = pivot("Patch panel", (0, 0.08, 0.22), (0, 0, -11))
+        block("Enclosure", (0, 0, 0), (3.98, 2.48, 0.40), dark, panel, 0.14)
+        component("patchbay", panel, steel, 0.20, 0.05)
+        for x, y in [
+            (-1.2, 0.4),
+            (-0.4, 0.4),
+            (0.4, 0.4),
+            (1.2, 0.4),
+            (-0.8, -0.5),
+            (0, -0.5),
+            (0.8, -0.5),
+        ]:
+            socket = pivot("Socket axis", (x, y, 0.31))
+            socket.parent = panel
+            cylinder("Jack bore", (0, 0, -0.035), 0.19, 0.06, dark, socket)
+            ring(socket, 0.216, 0.035, brass, 0.036)
+            ring(socket, 0.18, 0.007, dark, 0.018)
+        for x in [-1.75, 1.75]:
+            for y in [-1, 1]:
+                cylinder("Screw", (x, y, 0.34), 0.073, 0.025, steel, panel)
+                block(
+                    "Driver slot",
+                    (x, y, 0.355),
+                    (0.091, 0.017, 0.009),
+                    dark,
+                    panel,
+                    0.002,
+                )
+        stamp(panel, "J.  B U R N I T Z", 0, 0.9, 0.34, 0.15, dark)
+        stamp(panel, "P A T C H    O U T", 0, -1.01, 0.34, 0.105, dark)
+        plug = pivot("Patch lead", (0, -0.5, 0.31))
+        plug.parent = panel
+        for label, radius, z, length, mat in [
+            ("Tip", 0.085, 0.02, 0.28, brass),
+            ("Insulator", 0.10, 0.2, 0.08, dark),
+            ("Sleeve", 0.105, 0.32, 0.19, brass),
+            ("Grip", 0.17, 0.6, 0.40, copper),
+            ("Collar", 0.182, 0.395, 0.09, steel),
+            ("Strain relief", 0.115, 0.87, 0.19, dark),
+        ]:
+            separate.append(cylinder(label, (0, 0, z), radius, length, mat, plug))
+        for i in range(6):
+            separate.append(ring(plug, 0.167, 0.47 + i * 0.049, bronze, 0.012))
+        coords = [
+            (0, 0, 0.95),
+            (-0.09, -0.05, 1.33),
+            (-0.52, -0.24, 1.64),
+            (-1.25, -0.62, 1.28),
+            (-1.91, -0.80, 0.54),
+            (-2.25, -1.5, 0.31),
+            (-1.6, -2.35, 0.29),
+            (-2.15, -3.28, 0.20),
+            (-3.8, -3.55, 0.18),
+        ]
+        curve = bpy.data.curves.new("Flexible line", "CURVE")
+        curve.dimensions = "3D"
+        curve.resolution_u = 22
+        curve.bevel_depth = 0.073
+        curve.bevel_resolution = 6
+        spline = curve.splines.new("BEZIER")
+        spline.bezier_points.add(len(coords) - 1)
+        for point, xyz in zip(spline.bezier_points, coords):
+            point.co = xyz
+            point.handle_left_type = point.handle_right_type = "AUTO"
+        cord = bpy.data.objects.new("Patch cable", curve)
+        bpy.context.collection.objects.link(cord)
+        separate.append(finish(cord, "Patch cable", copper, plug))
+    scene.render.film_transparent = True
+    scene.render.resolution_x, scene.render.resolution_y = dimensions
+    scene.render.resolution_percentage = 65 if options.draft else 100
+    scene.render.image_settings.color_mode = "RGBA"
+    geometry = [ob for ob in scene.objects if ob.type in {"MESH", "FONT", "CURVE"}]
+    layers = [(kind, set(geometry) - set(separate))]
+    if separate:
+        layers.append(("patch-lead", set(separate)))
+    for name, visible in layers:
+        for obj in geometry:
+            obj.hide_render = obj not in visible
+        scene.render.filepath = str(tmp / (name + ".png"))
+        bpy.ops.render.render(write_still=True)
+        im = Image.open(scene.render.filepath).convert("RGBA")
+        im.save(options.output / (name + ".webp"), quality=88, method=6)
+
+    if kind == "contact":
+        # Reproject the actual EffectCraft exposures onto the central bend. The
+        # transparent margins encode the same camera and curvature as the still.
+        printer = options.source / "Contact printer"
+        atlas = Image.new("RGBA", (930, 210 * 8))
+        scene.render.resolution_x, scene.render.resolution_y = 930, 210
+        scene.render.resolution_percentage = 100
+        for index in range(8):
+            layer = Image.new("RGBA", frame.size)
+            photo = ImageOps.fit(
+                Image.open(printer / f"print-{index}.png").convert("RGBA"), (450, 182)
+            )
+            layer.paste(photo, (504, 30))
+            texture_path = tmp / f"exposure-{index}.png"
+            layer.save(texture_path)
+            tex.image = bpy.data.images.load(str(texture_path))
+            scene.render.filepath = str(tmp / f"insert-{index}.png")
+            bpy.ops.render.render(write_still=True)
+            atlas.paste(
+                Image.open(scene.render.filepath).convert("RGBA"), (0, index * 210)
+            )
+        atlas.save(options.output / "contact-exposures.webp", quality=88, method=6)
+        Image.open(printer / "Tape edge.png").save(
+            options.output / "tape-edge.webp", lossless=True
+        )
+
+
 with tempfile.TemporaryDirectory() as folder:
-    for chapter in ("voice", "memory", "frame"):
-        generate(chapter, Path(folder))
+    if options.print_only:
+        render_installation("contact", Path(folder))
+    elif options.installation:
+        graphics = options.source / "Studio graphics"
+        shutil.copyfile(graphics / "JB tape mark.svg", options.output / "jb-tape.svg")
+        for meter in ("voice", "memory", "frame"):
+            Image.open(graphics / f"meter-{meter}.png").save(
+                options.output / f"meter-{meter}.webp", lossless=True
+            )
+        for item in ("ribbon", "contact", "patchbay"):
+            render_installation(item, Path(folder))
+    else:
+        for chapter in ("voice", "memory", "frame"):
+            generate(chapter, Path(folder))

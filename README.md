@@ -48,3 +48,13 @@ python artwork/render_signal.py "/tmp/signal-path-sources" site/assets/signal
 ```
 
 The live studio film is a separate Gemini-generated macro shot. FilmCraft trims the shot and removes its audio. EffectCraft composites the opening title and animates its fade. The published H.264 edit, poster, and timed visual descriptions are in `site/assets/signal/`.
+
+The full-page installation carries the tape from the opening recorder to the project meters, contact print and seven-socket patch panel. FilmCraft cuts the reel, plate and aperture inserts from the original Gemini film. EffectCraft applies the emulsion and moving light, renders eight exposures, and prints the copper edge that follows the entire page. DesignCraft lays out the three meter faces and VectorCraft draws the JB monogram.
+
+To rebuild the installation, place the original shot at `Gemini Signal Path.mp4` in the Craft project directory and generate the models and traces as above. Then run the following commands with the same directory:
+
+```sh
+python artwork/build_signal_sources.py "/tmp/signal-path-sources" --contact-print
+python artwork/build_signal_sources.py "/tmp/signal-path-sources" --studio-identity
+python artwork/render_signal.py "/tmp/signal-path-sources" site/assets/installation --installation
+```
