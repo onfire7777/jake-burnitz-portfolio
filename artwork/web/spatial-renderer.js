@@ -79,6 +79,7 @@ export function startSpatialRenderer() {
   let engine, frame, unsupported = false, explicitMotion = null, recorderTouched = false;
   let lightLoad, photograph, lightReady = false;
   let viewportHeight = window.innerHeight, angle = 0, exploded = false, port = -1;
+  let lastScroll = window.scrollY, scrollingUntil = 0;
 
   const constrained = () => preference.matches || connection?.saveData === true;
   let systemConstrained = constrained();
@@ -162,7 +163,7 @@ export function startSpatialRenderer() {
     state.canvas = canvas;
   }
 
-  function paint(state, timestamp, crowded) {
+  function paint(state, timestamp, crowded, scrolling) {
     if (!state.canvas) makeSurface(state);
     const { source, renderer } = engine;
     const { camera, motion } = state;
@@ -191,7 +192,7 @@ export function startSpatialRenderer() {
       }
       // The camera can redraw without repeating every depth pass. Keep shadows
       // closer to a hand-driven turn or patch change than a slow idle gesture.
-      const interval = state.manualUntil > timestamp ? 1000 / 24 : (crowded ? 125 : 85);
+      const interval = state.manualUntil > timestamp ? 1000 / 24 : (scrolling ? 190 : (crowded ? 125 : 85));
       if (state.dirty || !state.lastShadow || timestamp - state.lastShadow >= interval) {
         state.shadow.needsUpdate = true;
         state.lastShadow = timestamp;
@@ -250,9 +251,20 @@ export function startSpatialRenderer() {
     const width = size("width", hero ? 1408 : (crowded ? 896 : 1280));
     const height = size("height", hero ? 960 : (crowded ? 640 : 704));
     if (engine.source.width !== width || engine.source.height !== height) engine.renderer.setSize(width, height, false);
+    const position = window.scrollY;
+    if (Math.abs(position - lastScroll) > 1) scrollingUntil = timestamp + 145;
+    lastScroll = position;
+    const scrolling = timestamp < scrollingUntil;
+    const interval = 1000 / (scrolling ? 24 : MAX_FRAME_RATE) - 1;
+    // Distribute expensive instruments across display frames as a gallery
+    // row enters view. The newest explicitly manipulated pose takes priority.
+    let renderedInstrument = false;
+    visible.sort((a, b) => Number(b.manualUntil > timestamp) - Number(a.manualUntil > timestamp) || a.lastDraw - b.lastDraw);
     for (const state of visible) {
-      if (!state.dirty && (!moving() || timestamp - state.lastDraw < 1000 / MAX_FRAME_RATE - 1)) continue;
-      try { paint(state, timestamp, crowded); } catch {
+      if (!state.dirty && (!moving() || timestamp - state.lastDraw < interval)) continue;
+      if (scrolling && crowded && state.shadow && renderedInstrument && moving()) continue;
+      if (state.shadow) renderedInstrument = true;
+      try { paint(state, timestamp, crowded, scrolling); } catch {
         if (engine?.lost) return;
         state.failed = true;
         release(state, true);
