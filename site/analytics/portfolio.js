@@ -1,3 +1,4 @@
+import { applyPostHogPreference, trackPostHog } from './posthog.js';
 import { applyGoogleAnalyticsPreference, trackGoogleAnalyticsEvent } from './google-analytics.js';
 import { applyClarityPreference, trackClarityEvent } from './microsoft-clarity.js';
 import { mayMeasurePageUrl } from './analytics-url.js';
@@ -11,6 +12,7 @@ let enabled = false;
 
 function setEnabled(next) {
   enabled = next && !privacySignal && mayMeasurePageUrl();
+  applyPostHogPreference(enabled);
   applyGoogleAnalyticsPreference(measurement, enabled);
   applyClarityPreference('zjtarzlnap', enabled);
   control.textContent = privacySignal ? 'Analytics off (privacy signal)' : next ? 'Turn analytics off' : 'Turn analytics on';
@@ -18,6 +20,7 @@ function setEnabled(next) {
 
 function track(name, fields) {
   if (!enabled || !mayMeasurePageUrl()) return;
+  trackPostHog(name, fields);
   trackGoogleAnalyticsEvent(measurement, name, fields);
   trackClarityEvent(name);
 }

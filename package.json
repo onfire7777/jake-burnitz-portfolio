@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:spatial": "node artwork/web/build.mjs"
+    "build:spatial": "node artwork/web/build.mjs",
+    "build:analytics": "esbuild node_modules/posthog-js/dist/module.js --bundle --minify --format=esm --outfile=site/analytics/posthog-sdk.js"
   },
   "dependencies": {
+    "posthog-js": "^1.455.4",
     "three": "0.187.0"
   },
   "devDependencies": {
