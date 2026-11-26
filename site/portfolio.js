@@ -199,13 +199,13 @@ function setupMedia() {
   let activeVideoLink;
 
   if (typeof videoDialog.showModal !== "function") return;
-  document.getElementById("videos").addEventListener("click", (event) => {
+  document.getElementById("main").addEventListener("click", (event) => {
     const link = event.target.closest("a[data-video]");
     if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
 
     event.preventDefault();
     const videoId = new URL(link.href).searchParams.get("v");
-    const label = document.getElementById(link.getAttribute("aria-labelledby"));
+    const label = document.getElementById(link.dataset.video || link.getAttribute("aria-labelledby"));
     activeVideoLink = link;
     videoTitle.textContent = label.textContent;
     videoSource.href = link.href;
