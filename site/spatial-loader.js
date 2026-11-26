@@ -14,9 +14,22 @@ function restoreImageLayers(root) {
 }
 document.addEventListener("studio-image-fallback", event => restoreImageLayers(event.target));
 
+function loadRenderer() {
+  if (location.protocol !== "file:") return import("./assets/engine/spatial.js");
+  // Browsers can load a classic sibling script from disk. The file build
+  // includes the same meshes and studio photograph, without cross-file fetches.
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "file-preview/spatial.js";
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.append(script);
+  });
+}
+
 function activate() {
   if (loading) return loading;
-  loading = import("./assets/engine/spatial.js").then(() => {
+  loading = loadRenderer().then(() => {
     toggle?.removeEventListener("click", optIn);
     recorder?.removeEventListener("recorder-view", useRecorder);
     reduced.removeEventListener("change", onPreference);

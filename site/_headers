@@ -1,3 +1,6 @@
+/
+  Link: </assets/instrument-sans.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin, </assets/instrument-serif-italic.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
